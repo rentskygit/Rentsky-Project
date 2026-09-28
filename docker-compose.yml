@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rentsky_app       
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - rentsky_network
+
+  web:
+    image: nginx:alpine
+    container_name: rentsky_nginx      
+    ports:
+      - "8001:80"                      
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - rentsky_network
+
+  db:
+    image: postgres:16
+    container_name: rentsky_db         
+    restart: always
+    environment:
+      POSTGRES_DB: rentsky
+      POSTGRES_USER: rentsky_user
+      POSTGRES_PASSWORD: rentsky_pass
+    ports:
+      - "5434:5432"                    
+    volumes:
+      - rentsky_pgdata:/var/lib/postgresql/data   
+    networks:
+      - rentsky_network
+
+volumes:
+  rentsky_pgdata:                      
+
+networks:
+  rentsky_network:
+    driver: bridge
