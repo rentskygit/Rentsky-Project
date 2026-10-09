@@ -23,6 +23,9 @@ class DatabaseSeeder extends Seeder
         ModuleSeeder::class,
         AdminUserSeeder::class,
         RoleSeeder::class,
+        PropertyCategorySeeder::class,
+        PropertyModuleSeeder::class,
+        PropertyOptionSeeder::class,
         ]);
 
 

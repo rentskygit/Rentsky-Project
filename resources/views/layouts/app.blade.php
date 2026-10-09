@@ -12,7 +12,7 @@
     <style>
         :root {
             --brand-primary: #1B1B18;
-            --brand-secondary: #004e6f;
+            --brand-secondary: #055476;
             --brand-muted: #706f6c;
             --brand-light: #FDFDFC;
             --brand-dark: #1b1b18;
@@ -793,11 +793,67 @@
                 gap: 0.2rem;
             }
         }
+        .page-loader {
+            position: fixed;
+            inset: 0;
+            background: rgba(253, 253, 252, 0.85);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            pointer-events: none;
+        }
+
+        .page-loader.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .page-loader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .page-loader-spinner {
+            width: 56px;
+            height: 56px;
+            border: 4px solid #e5e7eb;
+            border-top-color: var(--brand-secondary);
+            border-right-color: var(--brand-secondary);
+            border-radius: 50%;
+            animation: pageLoaderSpin 0.8s linear infinite;
+        }
+
+        @keyframes pageLoaderSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        .page-loader-content p {
+            font-size: 0.9rem;
+            color: var(--brand-muted);
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            margin: 0;
+        }
     </style>
 
     @stack('styles')
 </head>
 <body>
+    <div class="page-loader" id="pageLoader" aria-hidden="true">
+        <div class="page-loader-content">
+            <div class="page-loader-spinner"></div>
+            <p>Loading...</p>
+        </div>
+    </div>
 
     {{-- ── Overlay para cerrar sidebar en móvil ── --}}
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
@@ -857,7 +913,7 @@
         </button>
 
         <a href="/" class="navbar-brand">
-            <span class="brand-text">The<span>Outlet</span></span>
+            <span class="brand-text">JCM<span>Realty Group</span></span>
         </a>
 
         <div class="navbar-search">
@@ -1029,7 +1085,6 @@
             });
         })();
 
-        // ── Sidebar groups (acordeón) ──
         function toggleSidebarGroup(btn) {
             const group = btn.closest('.sidebar-group');
             if (group) {
@@ -1045,6 +1100,56 @@
                 }
             });
         });
+
+    (function () {
+        const loader = document.getElementById('pageLoader');
+        if (!loader) return;
+
+        let hideTimer;
+
+        function showLoader() {
+            clearTimeout(hideTimer);
+            loader.classList.add('active');
+            hideTimer = setTimeout(hideLoader, 20000);
+        }
+
+        function hideLoader() {
+            clearTimeout(hideTimer);
+            loader.classList.remove('active');
+        }
+
+        document.addEventListener('submit', function (e) {
+            const form = e.target;
+            if (form.matches('form') && !form.dataset.noLoader) {
+                showLoader();
+            }
+        }, true);
+
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('a');
+            if (!link) return;
+            if (link.dataset.noLoader !== undefined) return;
+            if (link.target === '_blank') return;
+            if (link.hasAttribute('download')) return;
+
+            const href = link.getAttribute('href');
+            if (!href) return;
+            if (href.startsWith('#')) return;
+            if (href.startsWith('mailto:') || href.startsWith('tel:')) return;
+            if (href.startsWith('http') && !href.startsWith(window.location.origin)) return;
+            if (href.startsWith('javascript:')) return;
+
+            showLoader();
+        }, true);
+
+        window.addEventListener('beforeunload', showLoader);
+
+        window.addEventListener('pageshow', hideLoader);
+
+        window.RentSky = window.RentSky || {};
+        window.RentSky.showLoader = showLoader;
+        window.RentSky.hideLoader = hideLoader;
+    })();
     </script>
 
     @stack('scripts')

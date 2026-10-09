@@ -7,6 +7,9 @@ use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\PropertyCategoryController;
+use App\Http\Controllers\PublicPropertyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,26 +26,36 @@ Route::middleware('guest')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| Rutas públicas (sin auth)
+|--------------------------------------------------------------------------
+*/
+Route::get('/', [HomeController::class, 'index'])->name('welcome');
+Route::get('/welcome', [HomeController::class, 'index']);
+Route::get('/search', [HomeController::class, 'search'])->name('search');
+
+// Propiedades públicas
+Route::get('/propiedades',        [PublicPropertyController::class, 'index'])->name('public.properties.index');
+Route::get('/propiedades/{slug}', [PublicPropertyController::class, 'show'])->name('public.properties.show');
+
+/*
+|--------------------------------------------------------------------------
 | Rutas protegidas (auth)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::get('/', function () {
-        return redirect()->route('welcome');
-    });
-
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
-
-    Route::get('/welcome', function () {
-        return view('welcome');
-    })->name('welcome');
 
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('modules', ModuleController::class);
     Route::resource('products', ProductController::class);
+
+    Route::resource('properties', PropertyController::class);
+    Route::resource('property-categories', PropertyCategoryController::class)
+        ->parameters(['property-categories' => 'propertyCategory'])
+        ->except(['show']);
 });

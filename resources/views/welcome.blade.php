@@ -1,20 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'RentSky | Rentals in Boston')
+@section('title', 'Find your home in Boston')
 
-@section('content')
+@push('styles')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-    /* ── Estilos específicos de la landing page ── */
     .landing-hero {
         margin: -2rem -2rem 2rem -2rem;
-        padding: 0;
-        background: linear-gradient(135deg, #0F1B2D 0%, #1B2E4B 100%);
+        background: linear-gradient(135deg, #1B1B18 0%, #2d2d2a 100%);
         color: white;
-        position: relative;
-        overflow: hidden;
         border-radius: 1rem;
+        overflow: hidden;
     }
-
     .hero-content {
         max-width: 1200px;
         margin: 0 auto;
@@ -23,924 +20,847 @@
         align-items: center;
         justify-content: space-between;
         gap: 2rem;
-        position: relative;
-        z-index: 2;
     }
-
-    .hero-text h1 {
-        font-size: 3rem;
-        font-weight: 800;
-        margin-bottom: 1rem;
-        line-height: 1.2;
-    }
-
-    .hero-text h1 span {
-        color: var(--brand-secondary);
-    }
-
-    .hero-text p {
-        font-size: 1.2rem;
-        color: #b8c4d6;
-        margin-bottom: 2rem;
-        max-width: 500px;
-    }
-
+    .hero-text h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.2; }
+    .hero-text h1 span { color: var(--brand-secondary); }
+    .hero-text p { font-size: 1.15rem; color: #a0a09a; margin-bottom: 2rem; max-width: 500px; }
     .hero-badge {
-        display: inline-block;
-        background: var(--brand-secondary);
-        color: white;
-        padding: 0.3rem 1rem;
-        border-radius: 9999px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-        text-transform: uppercase;
+        display: inline-block; background: var(--brand-secondary); color: white;
+        padding: 0.3rem 1rem; border-radius: 9999px; font-size: 0.8rem;
+        font-weight: 600; margin-bottom: 1rem; text-transform: uppercase;
         letter-spacing: 0.05em;
     }
-
-    .hero-actions {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .btn-hero-primary {
-        display: inline-block;
-        background: var(--brand-secondary);
-        color: white;
-        padding: 0.75rem 2rem;
-        border-radius: 9999px;
-        font-weight: 700;
-        transition: all 0.2s ease;
-        text-decoration: none;
-    }
-
-    .btn-hero-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(245, 48, 3, 0.35);
-    }
-
-    .btn-hero-outline {
-        display: inline-block;
-        background: transparent;
-        color: white;
-        padding: 0.75rem 2rem;
-        border-radius: 9999px;
-        font-weight: 700;
-        border: 2px solid rgba(255,255,255,0.4);
-        transition: all 0.2s ease;
-        text-decoration: none;
-    }
-
-    .btn-hero-outline:hover {
-        background: rgba(255,255,255,0.1);
-        border-color: white;
-    }
-
     .hero-image {
-        flex-shrink: 0;
-        width: 300px;
-        height: 300px;
-        background: rgba(255,255,255,0.05);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 8rem;
-        color: var(--brand-secondary);
+        flex-shrink: 0; width: 260px; height: 260px;
+        background: rgba(255,255,255,0.05); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 7rem; color: var(--brand-secondary);
         border: 2px solid rgba(245, 48, 3, 0.2);
     }
 
-    /* ── Carrusel ── */
-    .carousel-container {
-        position: relative;
-        margin-bottom: 3rem;
-        border-radius: 1rem;
-        overflow: hidden;
-        background: white;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        border: 1px solid #e5e7eb;
-    }
-
-    .carousel-track {
-        display: flex;
-        transition: transform 0.5s ease-in-out;
-        will-change: transform;
-    }
-
-    .carousel-slide {
-        min-width: 100%;
-        display: flex;
-        align-items: center;
-        padding: 2rem 3rem;
-        gap: 2rem;
-        background: white;
-    }
-
-    .carousel-slide .slide-content {
-        flex: 1;
-    }
-
-    .carousel-slide .slide-content h2 {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--brand-primary);
-        margin-bottom: 0.5rem;
-    }
-
-    .carousel-slide .slide-content p {
-        color: var(--brand-muted);
-        margin-bottom: 1rem;
-    }
-
-    .carousel-slide .slide-content .slide-tag {
-        display: inline-block;
-        padding: 0.25rem 1rem;
-        background: var(--brand-secondary);
-        color: white;
-        border-radius: 9999px;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-
-    .carousel-slide .slide-image {
-        flex-shrink: 0;
-        width: 200px;
-        height: 200px;
-        background: #f3f4f6;
-        border-radius: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 5rem;
-        color: var(--brand-muted);
-    }
-
-    .carousel-btn {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        z-index: 10;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        font-size: 1.2rem;
-        border: none;
-        color: var(--brand-primary);
-    }
-
-    .carousel-btn:hover {
-        background: var(--brand-secondary);
-        color: white;
-    }
-
-    .carousel-btn.prev {
-        left: 1rem;
-    }
-
-    .carousel-btn.next {
-        right: 1rem;
-    }
-
-    .carousel-dots {
-        display: flex;
-        justify-content: center;
-        gap: 0.5rem;
-        padding: 1rem 0;
-        background: white;
-    }
-
-    .carousel-dots .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #d1d5db;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border: none;
-        padding: 0;
-    }
-
-    .carousel-dots .dot.active {
-        background: var(--brand-secondary);
-        width: 24px;
-        border-radius: 4px;
-    }
-
-    /* ── Sección de tarjetas (Ofertas, Liquidaciones, etc.) ── */
+    /* ═══════════════════════════════════════════════════════
+       SECCIÓN MAPA + LISTA
+       ═══════════════════════════════════════════════════════ */
+    .section-header { margin: 3rem 0 1.5rem; }
     .section-title {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: var(--brand-primary);
-        margin-bottom: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        flex-wrap: wrap;
+        font-size: 1.75rem; font-weight: 700; color: var(--brand-primary);
+        display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
     }
+    .section-title span { color: var(--brand-secondary); }
+    .section-subtitle { color: var(--brand-muted); margin-top: 0.25rem; }
 
-    .section-title span {
-        color: var(--brand-secondary);
-    }
-
-    .section-subtitle {
-        color: var(--brand-muted);
-        margin-bottom: 1.5rem;
-        font-size: 1rem;
-    }
-
-    .cards-grid {
+    .properties-layout {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: 1.3fr 1fr;
         gap: 1.5rem;
-        margin-bottom: 3rem;
+        margin-bottom: 2rem;
+        min-height: 620px;
     }
 
-    .card-item {
-        background: white;
-        border-radius: 0.75rem;
-        border: 1px solid #e5e7eb;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        text-decoration: none;
-        color: inherit;
+    .map-wrapper {
+        background: white; border-radius: 1rem; overflow: hidden;
+        border: 1px solid #e5e7eb; position: relative;
+    }
+    #propertyMap { width: 100%; height: 100%; min-height: 620px; }
+
+    .list-wrapper {
+        background: white; border-radius: 1rem;
+        border: 1px solid #e5e7eb; display: flex; flex-direction: column;
+        max-height: 620px;
+    }
+    .list-header {
+        padding: 1rem 1.25rem; border-bottom: 1px solid #f3f4f6;
+        background: #f9fafb;
+    }
+    .list-header label {
+        font-size: 0.8rem; font-weight: 700; color: var(--brand-muted);
+        text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;
+    }
+    #addressSelect {
+        width: 100%; padding: 0.6rem 2.5rem 0.6rem 0.875rem;
+        border: 1px solid #d1d5db; border-radius: 0.5rem;
+        font-size: 0.9rem; background: white; cursor: pointer;
+        appearance: none; -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23706f6c'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.9rem center;
+        background-size: 14px 14px;
+    }
+    #addressSelect:focus {
+        outline: none; border-color: var(--brand-secondary);
+        box-shadow: 0 0 0 3px rgba(245, 48, 3, 0.1);
+    }
+
+    .properties-list {
+        flex: 1; overflow-y: auto; padding: 0.75rem;
+    }
+
+    .property-item {
+        display: flex; gap: 0.75rem; padding: 0.75rem;
+        border-radius: 0.5rem; cursor: pointer;
+        transition: all 0.2s ease; border: 1px solid transparent;
+        margin-bottom: 0.5rem;
+    }
+    .property-item:hover { background: #f9fafb; border-color: #e5e7eb; }
+    .property-item.active { background: #fff5f2; border-color: var(--brand-secondary); }
+    .property-item-img {
+        width: 90px; height: 90px; flex-shrink: 0;
+        border-radius: 0.5rem; overflow: hidden; background: #f3f4f6;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .property-item-img img { width: 100%; height: 100%; object-fit: cover; }
+    .property-item-img i { color: #d1d5db; font-size: 1.75rem; }
+    .property-item-body { flex: 1; min-width: 0; }
+    .property-item-title {
+        font-weight: 700; font-size: 0.9rem; color: var(--brand-primary);
+        margin-bottom: 0.15rem; white-space: nowrap; overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .property-item-addr {
+        font-size: 0.8rem; color: var(--brand-muted);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .property-item-meta {
+        display: flex; gap: 0.5rem; margin-top: 0.4rem; flex-wrap: wrap;
+    }
+    .property-item-tag {
+        font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 9999px;
+        background: #f3f4f6; color: var(--brand-muted); font-weight: 600;
+    }
+    .property-item-tag.pet { background: #dcfce7; color: #166534; }
+    .property-item-tag.rent { background: #fff5f2; color: var(--brand-secondary); }
+    .empty-list { padding: 3rem 1rem; text-align: center; color: var(--brand-muted); }
+    .empty-list i { font-size: 2.5rem; color: #d1d5db; display: block; margin-bottom: 0.75rem; }
+
+    /* ═══════════════════════════════════════════════════════
+       CATEGORÍAS
+       ═══════════════════════════════════════════════════════ */
+    .categories-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 1rem; margin-bottom: 3rem;
+    }
+    .category-card {
+        background: white; border: 1px solid #e5e7eb; border-radius: 0.75rem;
+        padding: 1.5rem 1rem; text-align: center; cursor: pointer;
+        transition: all 0.3s ease; text-decoration: none; color: var(--brand-primary);
         display: block;
     }
-
-    .card-item:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+    .category-card:hover {
+        transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.08);
         border-color: var(--brand-secondary);
     }
+    .category-card .category-icon {
+        font-size: 2.5rem; display: block; margin-bottom: 0.5rem;
+        color: var(--brand-secondary);
+    }
+    .category-card .category-name { font-weight: 600; font-size: 0.95rem; }
+    .category-card .category-count { font-size: 0.8rem; color: var(--brand-muted); }
 
-    .card-item .card-image {
+    /* ═══════════════════════════════════════════════════════
+       MODAL RICO
+       ═══════════════════════════════════════════════════════ */
+    .prop-modal-backdrop {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+        z-index: 9999; display: none; align-items: center; justify-content: center;
+        padding: 1.5rem;
+    }
+    .prop-modal-backdrop.open { display: flex; }
+
+    .prop-modal {
+        background: white; border-radius: 1rem; max-width: 1080px;
+        width: 100%; max-height: 90vh; overflow: hidden;
+        display: flex; flex-direction: column;
+    }
+    .prop-modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 1rem 1.5rem; border-bottom: 1px solid #f3f4f6;
+        flex-shrink: 0;
+    }
+    .prop-modal-header h2 { font-size: 1.05rem; font-weight: 700; margin: 0; }
+    .prop-modal-close {
+        background: none; border: none; font-size: 1.5rem; cursor: pointer;
+        color: var(--brand-muted); width: 32px; height: 32px;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        transition: all 0.15s;
+    }
+    .prop-modal-close:hover { background: #f3f4f6; color: var(--brand-primary); }
+
+    .prop-modal-body {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 0;
+        overflow: hidden;
+        padding: 0;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .prop-modal-left {
+        padding: 1.5rem;
+        overflow-y: auto;
+        border-right: 1px solid #f3f4f6;
+        background: #fafafa;
+    }
+    .prop-modal-right {
+        padding: 1.5rem;
+        overflow-y: auto;
+        background: white;
+    }
+
+    .prop-modal-gallery-main {
         width: 100%;
-        height: 180px;
-        background: #f9fafb;
+        aspect-ratio: 4/3;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        background: #f3f4f6;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 4rem;
-        color: var(--brand-muted);
-        position: relative;
+    }
+    .prop-modal-gallery-main img { width: 100%; height: 100%; object-fit: cover; }
+
+    .prop-modal-thumbs {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.4rem;
+        margin-top: 0.5rem;
+    }
+    .prop-modal-thumb {
+        aspect-ratio: 1;
+        border-radius: 0.4rem;
+        overflow: hidden;
+        border: 2px solid #e5e7eb;
+        background: none;
+        padding: 0;
+        cursor: pointer;
+        transition: border-color 0.15s;
+    }
+    .prop-modal-thumb.active { border-color: var(--brand-secondary); }
+    .prop-modal-thumb:hover { border-color: var(--brand-secondary); }
+    .prop-modal-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    .prop-modal-videos {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+        margin-top: 0.75rem;
+    }
+    .prop-modal-videos video {
+        width: 100%;
+        border-radius: 0.5rem;
+        background: black;
     }
 
-    .card-item .card-badge {
-        position: absolute;
-        top: 0.75rem;
-        right: 0.75rem;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.7rem;
+    /* Modal - precio hero */
+    .prop-m-price-hero {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    .prop-m-price {
+        font-size: 1.9rem;
+        font-weight: 800;
+        color: var(--brand-secondary);
+        letter-spacing: -0.02em;
+        line-height: 1;
+    }
+    .prop-m-price-period {
+        font-size: 0.9rem;
+        color: var(--brand-muted);
+        font-weight: 500;
+    }
+
+    /* Specs inline */
+    .prop-m-specs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    .prop-m-spec {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--brand-primary);
+    }
+    .prop-m-spec i { color: var(--brand-muted); }
+
+    /* Available */
+    .prop-m-available {
+        background: #fff5f2;
+        border: 1px solid #fbd8ce;
+        border-radius: 0.5rem;
+        padding: 0.65rem 0.85rem;
+        font-size: 0.88rem;
+        color: var(--brand-primary);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+    }
+    .prop-m-available i { color: var(--brand-secondary); font-size: 1rem; }
+
+    /* Secciones del modal */
+    .prop-m-section { margin-bottom: 1.25rem; }
+    .prop-m-section-title {
+        font-size: 0.82rem;
         font-weight: 700;
+        color: var(--brand-primary);
         text-transform: uppercase;
         letter-spacing: 0.05em;
-    }
-
-    .card-badge.sale {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .card-badge.liquidation {
-        background: #fef3c7;
-        color: #92400e;
-    }
-
-    .card-badge.new {
-        background: #dbeafe;
-        color: #1e40af;
-    }
-
-    .card-badge.hot {
-        background: #fce4ec;
-        color: #c62828;
-    }
-
-    .card-item .card-info {
-        padding: 1rem;
-    }
-
-    .card-item .card-name {
-        font-weight: 600;
-        color: var(--brand-primary);
-        margin-bottom: 0.25rem;
-        font-size: 0.95rem;
-    }
-
-    .card-item .card-category {
-        font-size: 0.8rem;
-        color: var(--brand-muted);
-        margin-bottom: 0.5rem;
-    }
-
-    .card-item .card-price {
+        margin-bottom: 0.6rem;
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+    .prop-m-section-title i { color: var(--brand-secondary); font-size: 0.9rem; }
+    .prop-m-text {
+        font-size: 0.88rem;
+        color: var(--brand-muted);
+        line-height: 1.65;
+        white-space: pre-line;
+        margin: 0;
     }
 
-    .card-item .card-price .current {
-        font-size: 1.1rem;
-        font-weight: 700;
+    /* Info rows */
+    .prop-m-info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+    }
+    .prop-m-info-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px dashed #f3f4f6;
+    }
+    .prop-m-info-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .prop-m-info-label { color: var(--brand-muted); }
+    .prop-m-info-value { font-weight: 700; color: var(--brand-primary); text-align: right; }
+
+    /* Chips */
+    .prop-m-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .prop-m-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.35rem 0.7rem;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 9999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--brand-primary);
+    }
+    .prop-m-chip i { color: var(--brand-secondary); font-size: 0.85rem; }
+    .prop-m-chip.pet {
+        background: #fff5f2;
+        border-color: #fbd8ce;
         color: var(--brand-secondary);
     }
 
-    .card-item .card-price .original {
-        font-size: 0.85rem;
-        color: var(--brand-muted);
-        text-decoration: line-through;
+    /* Screening list */
+    .prop-m-screening {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .prop-m-screening li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        font-size: 0.83rem;
+        color: var(--brand-primary);
+        line-height: 1.55;
+    }
+    .prop-m-screening li i {
+        color: var(--brand-secondary);
+        font-size: 0.95rem;
+        flex-shrink: 0;
+        margin-top: 0.15rem;
     }
 
-    .card-item .card-price .discount {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #16a34a;
-        background: #dcfce7;
-        padding: 0.1rem 0.5rem;
-        border-radius: 9999px;
+    /* Restrictions */
+    .prop-m-restrictions {
+        background: #fef3c7;
+        border: 1px solid #fde68a;
+        border-radius: 0.5rem;
+        padding: 0.75rem 0.9rem;
+        font-size: 0.83rem;
+        color: #78350f;
+        line-height: 1.6;
+        white-space: pre-line;
     }
 
-    .card-item .btn-add-cart {
-        width: 100%;
-        margin-top: 0.75rem;
-        padding: 0.4rem;
+    /* CTA del modal */
+    .prop-m-cta {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.8rem;
         background: var(--brand-secondary);
         color: white;
-        border: none;
         border-radius: 0.5rem;
-        font-weight: 600;
-        font-size: 0.85rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .card-item .btn-add-cart:hover {
-        background: #d42b02;
-        transform: scale(1.02);
-    }
-
-    .view-all-link {
-        display: inline-block;
-        color: var(--brand-secondary);
-        font-weight: 600;
-        margin-top: 0.5rem;
-        transition: color 0.2s ease;
-    }
-
-    .view-all-link:hover {
-        color: #d42b02;
-        text-decoration: underline;
-    }
-
-    /* ── Categorías ── */
-    .categories-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 3rem;
-    }
-
-    .category-card {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.75rem;
-        padding: 1.5rem 1rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
+        font-weight: 700;
+        font-size: 0.9rem;
         text-decoration: none;
-        color: var(--brand-primary);
-        display: block;
+        transition: all 0.2s;
+        margin-top: 0.5rem;
+    }
+    .prop-m-cta:hover {
+        background: #d42b02;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
     }
 
-    .category-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-        border-color: var(--brand-secondary);
-    }
-
-    .category-card .category-icon {
-        font-size: 2.5rem;
-        display: block;
-        margin-bottom: 0.5rem;
-    }
-
-    .category-card .category-name {
-        font-weight: 600;
-        font-size: 0.95rem;
-    }
-
-    .category-card .category-count {
-        font-size: 0.8rem;
-        color: var(--brand-muted);
-    }
-
-    /* ── Responsive ── */
+    /* ═══════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════ */
     @media (max-width: 1024px) {
-        .hero-content {
-            padding: 3rem 1.5rem;
-        }
-
-        .hero-text h1 {
-            font-size: 2.5rem;
-        }
-
-        .hero-image {
-            width: 250px;
-            height: 250px;
-            font-size: 6rem;
-        }
-
-        .cards-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.25rem;
-        }
+        .properties-layout { grid-template-columns: 1fr; }
+        .list-wrapper { max-height: 500px; }
+        #propertyMap { min-height: 400px; }
     }
-
+    @media (max-width: 900px) {
+        .prop-modal-body { grid-template-columns: 1fr; }
+        .prop-modal-left { border-right: none; border-bottom: 1px solid #f3f4f6; max-height: 320px; }
+        .prop-modal-right { max-height: 60vh; }
+    }
     @media (max-width: 768px) {
-        .landing-hero {
-            margin: -1rem -1rem 2rem -1rem;
-            border-radius: 0.5rem;
-        }
-
-        .hero-content {
-            flex-direction: column;
-            text-align: center;
-            padding: 2.5rem 1.5rem;
-            gap: 1.5rem;
-        }
-
-        .hero-text h1 {
-            font-size: 2.2rem;
-        }
-
-        .hero-text p {
-            max-width: 100%;
-            font-size: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .hero-actions {
-            justify-content: center;
-        }
-
-        .hero-image {
-            width: 180px;
-            height: 180px;
-            font-size: 4.5rem;
-        }
-
-        .carousel-slide {
-            flex-direction: column;
-            text-align: center;
-            padding: 1.5rem 1.5rem 2rem;
-            gap: 1rem;
-        }
-
-        .carousel-slide .slide-image {
-            width: 140px;
-            height: 140px;
-            font-size: 3.5rem;
-        }
-
-        .carousel-slide .slide-content h2 {
-            font-size: 1.5rem;
-        }
-
-        .carousel-btn {
-            width: 32px;
-            height: 32px;
-            font-size: 0.8rem;
-        }
-
-        .carousel-btn.prev {
-            left: 0.5rem;
-        }
-
-        .carousel-btn.next {
-            right: 0.5rem;
-        }
-
-        .section-title {
-            font-size: 1.5rem;
-        }
-
-        .cards-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-
-        .card-item .card-image {
-            height: 150px;
-            font-size: 3rem;
-        }
-
-        .categories-grid {
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 1rem;
-        }
-
-        .category-card {
-            padding: 1.25rem 0.75rem;
-        }
-
-        .category-card .category-icon {
-            font-size: 2rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .hero-content {
-            padding: 2rem 1rem;
-        }
-
-        .hero-text h1 {
-            font-size: 1.8rem;
-        }
-
-        .hero-image {
-            width: 140px;
-            height: 140px;
-            font-size: 3.5rem;
-        }
-
-        .hero-badge {
-            font-size: 0.7rem;
-            padding: 0.2rem 0.75rem;
-        }
-
-        .btn-hero-primary,
-        .btn-hero-outline {
-            padding: 0.6rem 1.5rem;
-            font-size: 0.9rem;
-        }
-
-        .carousel-slide {
-            padding: 1rem 1rem 1.5rem;
-        }
-
-        .carousel-slide .slide-image {
-            width: 100px;
-            height: 100px;
-            font-size: 2.5rem;
-        }
-
-        .carousel-slide .slide-content h2 {
-            font-size: 1.2rem;
-        }
-
-        .carousel-slide .slide-content p {
-            font-size: 0.9rem;
-        }
-
-        .carousel-slide .slide-content .slide-tag {
-            font-size: 0.7rem;
-            padding: 0.15rem 0.75rem;
-        }
-
-        .cards-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-        }
-
-        .card-item .card-image {
-            height: 120px;
-            font-size: 2.5rem;
-        }
-
-        .card-item .card-info {
-            padding: 0.75rem;
-        }
-
-        .card-item .card-name {
-            font-size: 0.85rem;
-        }
-
-        .card-item .card-price .current {
-            font-size: 0.95rem;
-        }
-
-        .card-item .card-price .original {
-            font-size: 0.75rem;
-        }
-
-        .card-item .card-price .discount {
-            font-size: 0.65rem;
-        }
-
-        .card-item .btn-add-cart {
-            font-size: 0.75rem;
-            padding: 0.3rem;
-        }
-
-        .categories-grid {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-        }
-
-        .category-card {
-            padding: 1rem 0.5rem;
-        }
-
-        .category-card .category-icon {
-            font-size: 1.5rem;
-        }
-
-        .category-card .category-name {
-            font-size: 0.8rem;
-        }
-
-        .category-card .category-count {
-            font-size: 0.7rem;
-        }
-
-        .section-title {
-            font-size: 1.2rem;
-        }
-
-        .section-subtitle {
-            font-size: 0.9rem;
-        }
-    }
-
-    @media (max-width: 360px) {
-        .cards-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
-        }
-
-        .card-item .card-image {
-            height: 100px;
-            font-size: 2rem;
-        }
-
-        .card-item .card-info {
-            padding: 0.5rem;
-        }
-
-        .card-item .card-name {
-            font-size: 0.75rem;
-        }
-
-        .categories-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
+        .hero-content { flex-direction: column; text-align: center; padding: 2.5rem 1.5rem; }
+        .hero-text h1 { font-size: 2rem; }
+        .hero-image { width: 160px; height: 160px; font-size: 4rem; }
+        .landing-hero { margin: -1rem -1rem 2rem -1rem; border-radius: 0.5rem; }
+        .prop-modal-thumbs { grid-template-columns: repeat(4, 1fr); }
     }
 </style>
+@endpush
 
-<!-- HERO -->
+@section('content')
+
+{{-- ── HERO ── --}}
 <section class="landing-hero">
     <div class="hero-content">
         <div class="hero-text">
-            <span class="hero-badge">🏙️ New in Boston</span>
-            <h1>Your next <span>home</span> in Boston</h1>
-            <p>Discover apartments, lofts, and brownstones for rent across Boston's most vibrant neighborhoods.</p>
-            <div class="hero-actions">
-                <a href="/products" class="btn-hero-primary">Browse Rentals</a>
-                <!-- <a href="/login" class="btn-hero-outline">Sign In</a> -->
-            </div>
+            <span class="hero-badge">🏙️ Boston, MA</span>
+            <h1>Find your <span>next home</span> in Boston</h1>
+            <p>Explore apartments, studios and suites available. Filter by area, browse the map and find your ideal space.</p>
         </div>
-        <div class="hero-image">
-            🏙️
-        </div>
+        <div class="hero-image">🏠</div>
     </div>
 </section>
 
-<!-- CARRUSEL -->
-<div class="carousel-container" id="mainCarousel">
-    <div class="carousel-track" id="carouselTrack">
-        <div class="carousel-slide">
-            <div class="slide-content">
-                <span class="slide-tag">⚡ Move-in Ready</span>
-                <h2>Rentals available right now</h2>
-                <p>Skip the wait. These Boston apartments are ready for immediate move-in — don't miss them.</p>
-                <a href="/products?filter=flash" class="btn btn-sm" style="display:inline-block;background:var(--brand-secondary);color:white;padding:0.5rem 1.5rem;border-radius:9999px;font-weight:600;transition:all 0.2s ease;">Explore</a>
-            </div>
-            <div class="slide-image">⚡</div>
+{{-- ── MAPA + LISTA ── --}}
+<div class="section-header">
+    <h2 class="section-title">📍 Explore <span>properties</span> on the map</h2>
+    <p class="section-subtitle">Select an address to locate it, or click a property to see the details.</p>
+</div>
+
+<div class="properties-layout">
+    <div class="map-wrapper">
+        <div id="propertyMap"></div>
+    </div>
+
+    <div class="list-wrapper">
+        <div class="list-header">
+            <label for="addressSelect">Jump to an address</label>
+            <select id="addressSelect">
+                <option value="">— Select a property —</option>
+                @foreach($properties as $p)
+                    <option value="{{ $p['id'] }}">
+                        {{ $p['address'] }}{{ $p['city'] ? ', ' . $p['city'] : '' }}
+                    </option>
+                @endforeach
+            </select>
         </div>
-        <div class="carousel-slide">
-            <div class="slide-content">
-                <span class="slide-tag">🏙️ Studios</span>
-                <h2>Studios in Downtown Boston</h2>
-                <p>Compact, modern studios in the heart of the city. Perfect for students and young professionals.</p>
-                <a href="/products?filter=studios" class="btn btn-sm" style="display:inline-block;background:var(--brand-secondary);color:white;padding:0.5rem 1.5rem;border-radius:9999px;font-weight:600;transition:all 0.2s ease;">View Studios</a>
-            </div>
-            <div class="slide-image">🏢</div>
+
+        <div class="properties-list" id="propertiesList">
+            @if($properties->isEmpty())
+                <div class="empty-list">
+                    <i class="bi bi-house-slash"></i>
+                    <p>No properties published yet.</p>
+                </div>
+            @else
+                @foreach($properties as $p)
+                    <div class="property-item"
+                         data-id="{{ $p['id'] }}"
+                         data-lat="{{ $p['lat'] }}"
+                         data-lng="{{ $p['lng'] }}">
+                        <div class="property-item-img">
+                            @if($p['primary_image'])
+                                <img src="{{ $p['primary_image'] }}" alt="{{ $p['address'] }}">
+                            @else
+                                <i class="bi bi-house"></i>
+                            @endif
+                        </div>
+                        <div class="property-item-body">
+                            <div class="property-item-title">{{ $p['title'] }}</div>
+                            <div class="property-item-addr">{{ $p['address'] }}{{ $p['city'] ? ', ' . $p['city'] : '' }}</div>
+                            <div class="property-item-meta">
+                                @if($p['rent_formatted'])
+                                    <span class="property-item-tag rent">{{ $p['rent_formatted'] }}/mo</span>
+                                @endif
+                                @if($p['unit_type'])
+                                    <span class="property-item-tag">{{ $p['unit_type'] }}</span>
+                                @endif
+                                @if($p['pet_friendly'])
+                                    <span class="property-item-tag pet">🐾 Pet friendly</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            @endif
         </div>
-        <div class="carousel-slide">
-            <div class="slide-content">
-                <span class="slide-tag">🆕 For Families</span>
-                <h2>Family homes in Brookline</h2>
-                <p>Spacious homes near top-rated schools, parks, and quiet residential streets.</p>
-                <a href="/products?filter=family" class="btn btn-sm" style="display:inline-block;background:var(--brand-secondary);color:white;padding:0.5rem 1.5rem;border-radius:9999px;font-weight:600;transition:all 0.2s ease;">Explore</a>
+    </div>
+</div>
+
+{{-- ── CATEGORÍAS ── --}}
+@if($categories->isNotEmpty())
+    <div class="section-header" style="margin-top: 3rem;">
+        <h2 class="section-title">🏘️ Browse by <span>type</span></h2>
+        <p class="section-subtitle">Filter properties by category.</p>
+    </div>
+
+    <div class="categories-grid">
+        @foreach($categories as $cat)
+            <a href="{{ route('public.properties.index', ['category' => $cat->id]) }}" class="category-card">
+                <i class="bi {{ $cat->icon ?? 'bi-house' }} category-icon"></i>
+                <div class="category-name">{{ $cat->name }}</div>
+                <div class="category-count">{{ $cat->properties_count }} properties</div>
+            </a>
+        @endforeach
+    </div>
+@endif
+
+{{-- ── MODAL DETALLE ── --}}
+<div class="prop-modal-backdrop" id="propModal">
+    <div class="prop-modal">
+        <div class="prop-modal-header">
+            <h2 id="modalTitle">Property</h2>
+            <button type="button" class="prop-modal-close" id="modalClose">&times;</button>
+        </div>
+        <div class="prop-modal-body">
+            <div class="prop-modal-left">
+                <div class="prop-modal-gallery-main" id="modalMainImage"></div>
+                <div class="prop-modal-thumbs" id="modalThumbs"></div>
+                <div id="modalVideos"></div>
             </div>
-            <div class="slide-image">🏡</div>
+            <div class="prop-modal-right" id="modalInfo"></div>
         </div>
     </div>
-    <button class="carousel-btn prev" id="prevBtn">‹</button>
-    <button class="carousel-btn next" id="nextBtn">›</button>
-    <div class="carousel-dots" id="carouselDots"></div>
 </div>
 
-<!-- SECCIONES DE TARJETAS -->
-<!-- Featured Rentals -->
-<div>
-    <div class="section-title">
-        🔥 <span>Featured</span> Rentals
-    </div>
-    <p class="section-subtitle">Handpicked Boston apartments you'll love.</p>
-    <div class="cards-grid" id="ofertas-grid">
-        <!-- Cards generadas por JavaScript -->
-    </div>
-    <a href="/products?filter=sale" class="view-all-link">View all featured →</a>
-</div>
+@endsection
 
-<!-- Price Drops -->
-<div style="margin-top: 2.5rem;">
-    <div class="section-title">
-        📉 <span>Price</span> Drops
-    </div>
-    <p class="section-subtitle">Recently reduced rents across Boston. Limited availability.</p>
-    <div class="cards-grid" id="liquidaciones-grid">
-        <!-- Cards generadas por JavaScript -->
-    </div>
-    <a href="/products?filter=liquidation" class="view-all-link">See all price drops →</a>
-</div>
-
-<!-- New Listings -->
-<div style="margin-top: 2.5rem;">
-    <div class="section-title">
-        🆕 <span>New</span> Listings
-    </div>
-    <p class="section-subtitle">Fresh on the market this week in Boston.</p>
-    <div class="cards-grid" id="nuevos-grid">
-        <!-- Cards generadas por JavaScript -->
-    </div>
-    <a href="/products?filter=new" class="view-all-link">See all new listings →</a>
-</div>
-
-<!-- Most Popular -->
-<div style="margin-top: 2.5rem;">
-    <div class="section-title">
-        ⭐ <span>Most</span> Popular
-    </div>
-    <p class="section-subtitle">The most-viewed rentals in Boston this month.</p>
-    <div class="cards-grid" id="vendidos-grid">
-        <!-- Cards generadas por JavaScript -->
-    </div>
-    <a href="/products?filter=bestseller" class="view-all-link">See what's trending →</a>
-</div>
-
-<!-- CATEGORÍAS -->
-<div style="margin-top: 3rem;">
-    <div class="section-title">
-        📂 <span>Browse by</span> Bedrooms
-    </div>
-    <p class="section-subtitle">Find the perfect layout for your lifestyle.</p>
-    <div class="categories-grid" id="categoriesGrid">
-        <!-- Categorías generadas por JavaScript -->
-    </div>
-</div>
-
+@push('scripts')
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // ── CARRUSEL ──
-    const track = document.getElementById('carouselTrack');
-    const slides = track.querySelectorAll('.carousel-slide');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const dotsContainer = document.getElementById('carouselDots');
-    let currentIndex = 0;
-    const totalSlides = slides.length;
+(function () {
+    'use strict';
 
-    // Crear dots
-    slides.forEach((_, i) => {
-        const dot = document.createElement('button');
-        dot.className = 'dot' + (i === 0 ? ' active' : '');
-        dot.dataset.index = i;
-        dot.addEventListener('click', () => goToSlide(i));
-        dotsContainer.appendChild(dot);
+    const properties = @json($properties);
+
+    // const BOSTON = [42.3601, -71.0589];
+
+    const geocoded = properties.filter(p => p.lat && p.lng);
+    const initialCenter = geocoded.length > 0
+        ? [
+            geocoded.reduce((s, p) => s + p.lat, 0) / geocoded.length,
+            geocoded.reduce((s, p) => s + p.lng, 0) / geocoded.length,
+          ]
+        : BOSTON;
+
+    const map = L.map('propertyMap').setView(initialCenter, 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+    }).addTo(map);
+
+    const icon = L.divIcon({
+        className: 'custom-marker',
+        html: '<div style="background:#f53003;width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform:rotate(45deg);color:white;font-size:14px;">🏠</div></div>',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
     });
 
-    const dots = dotsContainer.querySelectorAll('.dot');
+    const markers = {};
 
-    function goToSlide(index) {
-        if (index < 0) index = totalSlides - 1;
-        if (index >= totalSlides) index = 0;
-        currentIndex = index;
-        track.style.transform = `translateX(-${currentIndex * 100}%)`;
-        dots.forEach((dot, i) => {
-            dot.classList.toggle('active', i === currentIndex);
+    properties.forEach(p => {
+        if (!p.lat || !p.lng) return;
+
+        const marker = L.marker([p.lat, p.lng], { icon }).addTo(map);
+
+        const priceLine = p.rent_formatted
+            ? `<div style="color:#f53003;font-weight:800;font-size:0.95rem;margin:0.25rem 0;">${p.rent_formatted} <span style="font-weight:500;color:#706f6c;font-size:0.8rem;">/mo</span></div>`
+            : '';
+
+        marker.bindPopup(`
+            <div style="font-family:inherit; min-width:200px;">
+                <strong style="font-size:0.9rem;">${p.title}</strong><br>
+                <span style="font-size:0.8rem;color:#706f6c;">${p.address}</span>
+                ${priceLine}
+                <button onclick="window.openPropertyModal(${p.id})"
+                        style="margin-top:0.4rem;background:#f53003;color:white;border:none;padding:0.4rem 0.85rem;border-radius:0.4rem;font-size:0.8rem;font-weight:600;cursor:pointer;">
+                    View details
+                </button>
+            </div>
+        `);
+
+        marker.on('click', () => highlightCard(p.id));
+        markers[p.id] = marker;
+    });
+
+    if (geocoded.length > 1) {
+        const bounds = L.latLngBounds(geocoded.map(p => [p.lat, p.lng]));
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+    }
+
+    const select = document.getElementById('addressSelect');
+    select?.addEventListener('change', function () {
+        const id = parseInt(this.value);
+        if (!id) return;
+
+        const p = properties.find(x => x.id === id);
+        if (!p) return;
+
+        if (p.lat && p.lng) {
+            map.flyTo([p.lat, p.lng], 16, { duration: 0.8 });
+            markers[p.id]?.openPopup();
+        }
+        highlightCard(id);
+    });
+
+    function highlightCard(id) {
+        document.querySelectorAll('.property-item').forEach(el => {
+            el.classList.toggle('active', parseInt(el.dataset.id) === id);
         });
     }
 
-    prevBtn.addEventListener('click', () => goToSlide(currentIndex - 1));
-    nextBtn.addEventListener('click', () => goToSlide(currentIndex + 1));
+    document.querySelectorAll('.property-item').forEach(card => {
+        card.addEventListener('click', function () {
+            const id = parseInt(this.dataset.id);
+            const p = properties.find(x => x.id === id);
+            if (!p) return;
 
-    // Auto-play
-    let autoPlay = setInterval(() => goToSlide(currentIndex + 1), 5000);
-
-    // Pausar auto-play en hover
-    const carousel = document.getElementById('mainCarousel');
-    carousel.addEventListener('mouseenter', () => clearInterval(autoPlay));
-    carousel.addEventListener('mouseleave', () => {
-        clearInterval(autoPlay);
-        autoPlay = setInterval(() => goToSlide(currentIndex + 1), 5000);
+            if (p.lat && p.lng) {
+                map.flyTo([p.lat, p.lng], 16, { duration: 0.8 });
+                markers[p.id]?.openPopup();
+            }
+            highlightCard(id);
+            openPropertyModal(id);
+        });
     });
 
-    // ── DATOS DE EJEMPLO (Boston Rentals) ──
-    const categories = [
-        { id: 1, name: 'Studio', icon: '🏢', count: 42 },
-        { id: 2, name: '1 Bedroom', icon: '🛏️', count: 28 },
-        { id: 3, name: '2 Bedrooms', icon: '🏠', count: 35 },
-        { id: 4, name: '3 Bedrooms', icon: '🏡', count: 19 },
-        { id: 5, name: '4 Bedrooms', icon: '🏘️', count: 23 },
-        { id: 6, name: '5+ Bedrooms', icon: '🏰', count: 31 },
-    ];
+    const modal       = document.getElementById('propModal');
+    const modalTitle  = document.getElementById('modalTitle');
+    const modalMain   = document.getElementById('modalMainImage');
+    const modalThumbs = document.getElementById('modalThumbs');
+    const modalInfo   = document.getElementById('modalInfo');
+    const modalVideos = document.getElementById('modalVideos');
+    const modalClose  = document.getElementById('modalClose');
 
-    const products = {
-        ofertas: [
-            { id: 1, name: 'Back Bay Studio', category: 'Back Bay', price: 2400, original: 2700, discount: '11%', badge: 'sale', icon: '🏢' },
-            { id: 2, name: 'Seaport 1BR Loft', category: 'Seaport', price: 3200, original: 3600, discount: '11%', badge: 'sale', icon: '🌇' },
-            { id: 3, name: 'Beacon Hill Brownstone', category: 'Beacon Hill', price: 4100, original: 4500, discount: '9%', badge: 'sale', icon: '🏠' },
-            { id: 4, name: 'Fenway Modern 1BR', category: 'Fenway', price: 2850, original: 3100, discount: '8%', badge: 'sale', icon: '🏙️' },
-        ],
-        liquidaciones: [
-            { id: 5, name: 'South End 2BR', category: 'South End', price: 3400, original: 4200, discount: '19%', badge: 'liquidation', icon: '🏡' },
-            { id: 6, name: 'Cambridge 3BR', category: 'Cambridge', price: 4800, original: 5600, discount: '14%', badge: 'liquidation', icon: '🏘️' },
-            { id: 7, name: 'North End Studio', category: 'North End', price: 2100, original: 2600, discount: '19%', badge: 'liquidation', icon: '🏢' },
-            { id: 8, name: 'Charlestown Loft', category: 'Charlestown', price: 3500, original: 4100, discount: '15%', badge: 'liquidation', icon: '🏙️' },
-        ],
-        nuevos: [
-            { id: 9, name: 'Jamaica Plain 1BR', category: 'Jamaica Plain', price: 2300, original: null, discount: null, badge: 'new', icon: '🛏️' },
-            { id: 10, name: 'Allston 2BR', category: 'Allston', price: 2900, original: null, discount: null, badge: 'new', icon: '🏠' },
-            { id: 11, name: 'Brighton Studio', category: 'Brighton', price: 1900, original: null, discount: null, badge: 'new', icon: '🏢' },
-            { id: 12, name: 'Somerville 1BR', category: 'Somerville', price: 2500, original: null, discount: null, badge: 'new', icon: '🏙️' },
-        ],
-        vendidos: [
-            { id: 13, name: 'Back Bay Penthouse', category: 'Back Bay', price: 6500, original: 7200, discount: '10%', badge: 'hot', icon: '🏰' },
-            { id: 14, name: 'Seaport 2BR', category: 'Seaport', price: 4200, original: 4800, discount: '12%', badge: 'hot', icon: '🌇' },
-            { id: 15, name: 'Beacon Hill 1BR', category: 'Beacon Hill', price: 3100, original: 3500, discount: '11%', badge: 'hot', icon: '🏠' },
-            { id: 16, name: 'Fenway Studio', category: 'Fenway', price: 2200, original: 2500, discount: '12%', badge: 'hot', icon: '🏢' },
-        ]
-    };
+    function openPropertyModal(id) {
+        const p = properties.find(x => x.id === id);
+        if (!p) return;
 
-    // ── FUNCIÓN PARA RENDERIZAR CARDS ──
-    function renderCards(containerId, items, categorySlug) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        container.innerHTML = items.map(item => `
-            <a href="/products/${item.id}" class="card-item">
-                <div class="card-image">
-                    ${item.icon || '🏢'}
-                    ${item.badge ? `<span class="card-badge ${item.badge}">${item.badge === 'sale' ? 'Featured' : item.badge === 'liquidation' ? 'Reduced' : item.badge === 'new' ? 'New' : 'Trending'}</span>` : ''}
+        modalTitle.textContent = (p.title || 'Property') + ' — ' + p.address;
+
+        const images = (p.images && p.images.length)
+            ? p.images
+            : (p.primary_image ? [p.primary_image] : []);
+
+        if (images.length) {
+            modalMain.innerHTML = `<img src="${images[0]}" alt="">`;
+            modalThumbs.innerHTML = images.map((url, i) =>
+                `<button type="button" class="prop-modal-thumb ${i===0?'active':''}" data-url="${url}">
+                    <img src="${url}">
+                </button>`
+            ).join('');
+            modalThumbs.querySelectorAll('.prop-modal-thumb').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    modalMain.innerHTML = `<img src="${this.dataset.url}" alt="">`;
+                    modalThumbs.querySelectorAll('.prop-modal-thumb').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        } else {
+            modalMain.innerHTML = `<i class="bi bi-image" style="font-size:4rem;color:#d1d5db;"></i>`;
+            modalThumbs.innerHTML = '';
+        }
+
+        modalVideos.innerHTML = (p.videos && p.videos.length)
+            ? `<div class="prop-m-section" style="margin-top:1rem;">
+                 <div class="prop-m-section-title"><i class="bi bi-camera-video"></i> Video tour</div>
+                 <div class="prop-modal-videos">
+                   ${p.videos.map(v => `<video src="${v}" controls preload="metadata"></video>`).join('')}
+                 </div>
+               </div>`
+            : '';
+
+        let html = '';
+
+        html += `<div class="prop-m-price-hero">`;
+        if (p.rent_formatted) {
+            html += `<span class="prop-m-price">${p.rent_formatted}</span>
+                     <span class="prop-m-price-period">/ month</span>`;
+        } else {
+            html += `<span class="prop-m-price">Contact for pricing</span>`;
+        }
+        html += `</div>`;
+
+        const specs = [];
+        if (p.title)       specs.push(`<div class="prop-m-spec"><i class="bi bi-door-closed"></i>${p.title}</div>`);
+        if (p.bathrooms)   specs.push(`<div class="prop-m-spec"><i class="bi bi-droplet"></i>${p.bathrooms} ba</div>`);
+        if (p.square_feet) specs.push(`<div class="prop-m-spec"><i class="bi bi-rulers"></i>${parseInt(p.square_feet).toLocaleString()} sqft</div>`);
+        if (p.unit_type)   specs.push(`<div class="prop-m-spec"><i class="bi bi-house"></i>${p.unit_type}</div>`);
+        if (specs.length) {
+            html += `<div class="prop-m-specs">${specs.join('')}</div>`;
+        }
+
+        if (p.available_date) {
+            html += `<div class="prop-m-available">
+                <i class="bi bi-calendar-check"></i>
+                Available ${p.available_date}
+            </div>`;
+        }
+
+        if (p.description) {
+            html += `<div class="prop-m-section">
+                <div class="prop-m-section-title"><i class="bi bi-text-paragraph"></i> About</div>
+                <p class="prop-m-text">${p.description.replace(/\n/g,'<br>')}</p>
+            </div>`;
+        }
+
+        const leaseRows = [];
+        if (p.lease_term)        leaseRows.push(['Lease term', p.lease_term]);
+        if (p.rent_formatted)    leaseRows.push(['Monthly rent', p.rent_formatted]);
+        if (p.deposit_formatted) leaseRows.push(['Security deposit', p.deposit_formatted]);
+        if (leaseRows.length) {
+            html += `<div class="prop-m-section">
+                <div class="prop-m-section-title"><i class="bi bi-cash-stack"></i> Lease & Costs</div>
+                <div class="prop-m-info-list">
+                    ${leaseRows.map(([k,v]) => `<div class="prop-m-info-row">
+                        <span class="prop-m-info-label">${k}</span>
+                        <span class="prop-m-info-value">${v}</span>
+                    </div>`).join('')}
                 </div>
-                <div class="card-info">
-                    <div class="card-name">${item.name}</div>
-                    <div class="card-category">${item.category}</div>
-                    <div class="card-price">
-                        <span class="current">$${item.price.toLocaleString()}/mo</span>
-                        ${item.original ? `<span class="original">$${item.original.toLocaleString()}/mo</span>` : ''}
-                        ${item.discount ? `<span class="discount">-${item.discount}</span>` : ''}
-                    </div>
-                    <button class="btn-add-cart" onclick="event.preventDefault(); event.stopPropagation(); alert('Tour scheduled! We will contact you soon.')">
-                        🗓️ Schedule Tour
-                    </button>
+            </div>`;
+        }
+
+        const features = [];
+        if (p.parking_type)   features.push(['Parking', p.parking_type + (p.parking_spot ? ' — Spot ' + p.parking_spot : '')]);
+        if (p.cooling_system) features.push(['Cooling', p.cooling_system]);
+        if (p.heating_system) features.push(['Heating', p.heating_system]);
+        if (p.laundry)        features.push(['Laundry', p.laundry]);
+        if (features.length) {
+            html += `<div class="prop-m-section">
+                <div class="prop-m-section-title"><i class="bi bi-stars"></i> Features</div>
+                <div class="prop-m-info-list">
+                    ${features.map(([k,v]) => `<div class="prop-m-info-row">
+                        <span class="prop-m-info-label">${k}</span>
+                        <span class="prop-m-info-value">${v}</span>
+                    </div>`).join('')}
                 </div>
-            </a>
-        `).join('');
+            </div>`;
+        }
+
+        if (p.pet_friendly) {
+            const petChips = [];
+            if (p.allow_cats)       petChips.push(`<span class="prop-m-chip pet"><i class="bi bi-check-circle-fill"></i> Cats welcome</span>`);
+            if (p.allow_small_dogs) petChips.push(`<span class="prop-m-chip pet"><i class="bi bi-check-circle-fill"></i> Small dogs${p.small_dog_max_weight ? ' (≤ ' + p.small_dog_max_weight + ' lbs)' : ''}</span>`);
+            if (p.allow_large_dogs) petChips.push(`<span class="prop-m-chip pet"><i class="bi bi-check-circle-fill"></i> Large dogs welcome</span>`);
+            if (petChips.length) {
+                html += `<div class="prop-m-section">
+                    <div class="prop-m-section-title"><i class="bi bi-heart"></i> Pet policy</div>
+                    <div class="prop-m-chips">${petChips.join('')}</div>
+                    ${p.max_pets ? `<p class="prop-m-text" style="margin-top:.5rem;font-size:.8rem;">Up to <strong>${p.max_pets}</strong> pet${p.max_pets > 1 ? 's' : ''} allowed.</p>` : ''}
+                </div>`;
+            }
+        }
+
+        if (p.amenities && p.amenities.length) {
+            html += `<div class="prop-m-section">
+                <div class="prop-m-section-title"><i class="bi bi-list-check"></i> Amenities</div>
+                <div class="prop-m-chips">
+                    ${p.amenities.map(a => `<span class="prop-m-chip">${a.icon ? `<i class="bi ${a.icon}"></i>` : ''}${a.name}</span>`).join('')}
+                </div>
+            </div>`;
+        }
+
+        if (p.utilities && p.utilities.length) {
+            html += `<div class="prop-m-section">
+                <div class="prop-m-section-title"><i class="bi bi-plug"></i> Utilities included</div>
+                <div class="prop-m-chips">
+                    ${p.utilities.map(u => `<span class="prop-m-chip">${u.icon ? `<i class="bi ${u.icon}"></i>` : ''}${u.name}</span>`).join('')}
+                </div>
+            </div>`;
+        }
+
+        const screening = [];
+        if (p.income_to_rent_ratio) {
+            screening.push(`Combined gross monthly income of at least <strong>${p.income_to_rent_ratio}× the monthly rent</strong>.`);
+        }
+        if (p.allow_eviction_older_than_5_years) {
+            screening.push(`Past evictions considered on a case-by-case basis if they occurred <strong>more than 5 years ago</strong>.`);
+        } else {
+            screening.push(`Recent evictions (within the last 5 years) may affect your application.`);
+        }
+        screening.push(`Standard credit and background screening applies to all applicants equally.`);
+
+        html += `<div class="prop-m-section">
+            <div class="prop-m-section-title"><i class="bi bi-clipboard-check"></i> What you'll need to qualify</div>
+            <ul class="prop-m-screening">
+                ${screening.map(s => `<li><i class="bi bi-check-circle"></i><span>${s}</span></li>`).join('')}
+            </ul>
+        </div>`;
+
+        if (p.restrictions) {
+            html += `<div class="prop-m-section">
+                <div class="prop-m-section-title"><i class="bi bi-exclamation-circle"></i> House rules</div>
+                <div class="prop-m-restrictions">${p.restrictions.replace(/\n/g,'<br>')}</div>
+            </div>`;
+        }
+
+        html += `<a href="${p.url}" class="prop-m-cta">
+            <i class="bi bi-arrow-right-circle"></i> View full details
+        </a>`;
+
+        modalInfo.innerHTML = html;
+
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
     }
 
-    // ── RENDERIZAR CATEGORÍAS ──
-    function renderCategories() {
-        const container = document.getElementById('categoriesGrid');
-        if (!container) return;
-        container.innerHTML = categories.map(cat => `
-            <a href="/categories/${cat.id}" class="category-card">
-                <span class="category-icon">${cat.icon}</span>
-                <div class="category-name">${cat.name}</div>
-                <div class="category-count">${cat.count} listings</div>
-            </a>
-        `).join('');
+    function closePropertyModal() {
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
     }
 
-    // ── RENDERIZA TODO ──
-    renderCards('ofertas-grid', products.ofertas);
-    renderCards('liquidaciones-grid', products.liquidaciones);
-    renderCards('nuevos-grid', products.nuevos);
-    renderCards('vendidos-grid', products.vendidos);
-    renderCategories();
-});
+    window.openPropertyModal = openPropertyModal;
+
+    modalClose?.addEventListener('click', closePropertyModal);
+    modal?.addEventListener('click', e => { if (e.target === modal) closePropertyModal(); });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && modal.classList.contains('open')) closePropertyModal();
+    });
+
+})();
 </script>
-@endsection
+@endpush

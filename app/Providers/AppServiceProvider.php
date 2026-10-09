@@ -11,6 +11,8 @@ use App\Repositories\Contracts\Product\CategoryRepositoryInterface;
 use App\Repositories\CategoryRepository;
 use App\Services\Contracts\Product\ImageStorageInterface;
 use App\Services\ImageStorageService;
+use App\Services\Contracts\Property\VideoStorageInterface;
+use App\Services\VideoStorageService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,6 +39,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             ProductServiceInterface::class,
             ProductService::class
+        );
+        $this->app->bind(
+            VideoStorageInterface::class, 
+            VideoStorageService::class
         );
     }
 

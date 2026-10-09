@@ -23,7 +23,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             return redirect()
-                ->intended(route('dashboard'))
+                ->intended(route('welcome'))
                 ->with('success', 'Bienvenido de vuelta, ' . Auth::user()->name);
         }
 
@@ -49,7 +49,7 @@ class AuthController extends Controller
         Auth::login($user);
 
         return redirect()
-            ->route('dashboard')
+            ->route('welcome')
             ->with('success', 'Cuenta creada exitosamente. Bienvenido, ' . $user->name);
     }
 
