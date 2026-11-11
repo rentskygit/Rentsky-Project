@@ -26,6 +26,8 @@ class DatabaseSeeder extends Seeder
         PropertyCategorySeeder::class,
         PropertyModuleSeeder::class,
         PropertyOptionSeeder::class,
+        ApartmentModuleSeeder::class,
+        ClientModuleSeeder::class,
         ]);
 
 

@@ -1,40 +1,36 @@
 @extends('layouts.app')
-
-@section('title', 'Gestión de Usuarios')
+@section('title', 'Users')
 
 @section('content')
-    {{-- ── Page header ── --}}
     <div class="page-header">
-        <h1 class="page-title">Gestión de <span>Usuarios</span></h1>
+        <h1 class="page-title">User <span>Management</span></h1>
         <a href="{{ route('users.create') }}" class="btn-create">
-            <i class="bi bi-plus-lg"></i>
-            Nuevo usuario
+            <i class="bi bi-plus-lg"></i> New user
         </a>
     </div>
 
-    {{-- ── Table card ── --}}
     <div class="card-custom">
         <div class="card-header-inner">
             <i class="bi bi-people-fill text-muted" style="font-size:.95rem"></i>
-            <span style="font-size:.875rem; font-weight:600;">Todos los usuarios</span>
+            <span style="font-size:.875rem; font-weight:600;">All users</span>
             <span class="badge-count">{{ $users->count() }}</span>
         </div>
 
         @if($users->isEmpty())
             <div class="empty-state">
                 <i class="bi bi-person-slash"></i>
-                <p class="mb-1" style="font-weight:600; color:var(--brand-dark);">Sin usuarios aún</p>
-                <p style="font-size:.875rem; color:var(--brand-muted);">Crea el primero para empezar.</p>
+                <p class="mb-1" style="font-weight:600; color:var(--brand-dark);">No users yet</p>
+                <p style="font-size:.875rem; color:var(--brand-muted);">Create the first one to get started.</p>
             </div>
         @else
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Usuario</th>
+                        <th>User</th>
                         <th>Email</th>
                         <th>Roles</th>
-                        <th>Creado</th>
-                        <th class="text-end">Acciones</th>
+                        <th>Created</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -42,9 +38,7 @@
                     <tr>
                         <td>
                             <div class="user-cell">
-                                <span class="avatar">
-                                    {{ strtoupper(substr($user->name, 0, 1)) }}
-                                </span>
+                                <span class="avatar">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                                 <span class="user-name">{{ $user->name }}</span>
                             </div>
                         </td>
@@ -53,35 +47,32 @@
                         </td>
                         <td>
                             @if($user->is_super_admin)
-                                <span style="display:inline-block; padding:0.15rem 0.6rem; border-radius:9999px; font-size:0.7rem; font-weight:700; background:#fef3c7; color:#92400e;">SUPER ADMIN</span>
+                                <span class="status-badge superadmin">SUPER ADMIN</span>
                             @endif
                             @forelse($user->roles as $role)
-                                <span style="display:inline-block; padding:0.15rem 0.6rem; border-radius:9999px; font-size:0.7rem; font-weight:600; background:#e0e7ff; color:#3730a3; margin-right:0.25rem;">
-                                    {{ $role->name }}
-                                </span>
+                                <span class="status-badge role" style="margin-right:0.25rem;">{{ $role->name }}</span>
                             @empty
                                 @unless($user->is_super_admin)
-                                    <span style="color:var(--brand-muted); font-size:0.8rem;">Sin roles</span>
+                                    <span style="color:var(--brand-muted); font-size:0.8rem;">No roles</span>
                                 @endunless
                             @endforelse
                         </td>
                         <td>
                             <span style="font-size:.8rem; color:var(--brand-muted);">
-                                {{ $user->created_at->format('d M Y') }}
+                                {{ $user->created_at->format('M d, Y') }}
                             </span>
                         </td>
                         <td>
                             <div class="actions-cell justify-content-end">
-                                <a href="{{ route('users.edit', $user) }}" class="btn-edit">
-                                    <i class="bi bi-pencil"></i> Editar
+                                <a href="{{ route('users.edit', $user) }}" class="btn-icon-action" title="Edit">
+                                    <i class="bi bi-pencil"></i>
                                 </a>
-
                                 <form method="POST" action="{{ route('users.destroy', $user) }}"
-                                      onsubmit="return confirmDelete(event, '{{ addslashes($user->name) }}')">
+                                      onsubmit="return confirmDelete(event, '{{ addslashes($user->name) }}')" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn-delete">
-                                        <i class="bi bi-trash3"></i> Eliminar
+                                    <button type="submit" class="btn-icon-action danger" title="Delete">
+                                        <i class="bi bi-trash3"></i>
                                     </button>
                                 </form>
                             </div>

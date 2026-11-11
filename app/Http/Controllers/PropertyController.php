@@ -8,7 +8,7 @@ use App\Models\Property\PropertyCategory;
 use App\Models\Property\PropertyImage;
 use App\Models\Property\PropertyOption;
 use App\Models\Property\PropertyVideo;
-use App\Services\Contracts\Product\ImageStorageInterface;
+use App\Services\Contracts\Property\PropertyImageStorageInterface;
 use App\Services\Contracts\Property\VideoStorageInterface;
 use App\Services\GeocodingService;
 use App\Services\PropertyViewService;
@@ -19,10 +19,10 @@ use Illuminate\Support\Facades\Log;
 class PropertyController extends Controller
 {
     public function __construct(
-        protected ImageStorageInterface $imageStorage,
+        protected PropertyImageStorageInterface $imageStorage,
         protected VideoStorageInterface $videoStorage,
-        protected PropertyViewService   $viewService,
-        protected GeocodingService      $geocoder,
+        protected PropertyViewService $viewService,
+        protected GeocodingService $geocoder,
     ) {}
 
     public function index(Request $request)
@@ -32,8 +32,8 @@ class PropertyController extends Controller
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where(fn($q) => $q
-                ->where('address', 'LIKE', "%{$s}%")
-                ->orWhere('zip_code', 'LIKE', "%{$s}%"));
+                ->where('address', 'ILIKE', "%{$s}%")
+                ->orWhere('zip_code', 'ILIKE', "%{$s}%"));
         }
 
         if ($request->filled('category')) {
@@ -65,12 +65,14 @@ class PropertyController extends Controller
                     'images', 'videos',
                     'delete_images', 'delete_videos',
                     'amenities', 'utilities',
+                    'image_order',
                 ])
             );
 
             $this->applyGeocoding($property);
             $this->handleUploads($property, $request);
             $this->syncPivots($property, $request);
+            $this->normalizeImages($property);
 
             DB::commit();
 
@@ -96,7 +98,16 @@ class PropertyController extends Controller
 
         $stats = $this->viewService->getStats($property);
 
-        return view('properties.show', compact('property', 'stats'));
+        $relatedProperties = Property::active()
+            ->where('id', '!=', $property->id)
+            ->when($property->property_category_id, function ($q) use ($property) {
+                $q->where('property_category_id', $property->property_category_id);
+            })
+            ->with(['primaryImage', 'category'])
+            ->limit(4)
+            ->get();
+
+        return view('properties.show', compact('property', 'stats', 'relatedProperties'));
     }
 
     public function edit(Property $property)
@@ -119,13 +130,16 @@ class PropertyController extends Controller
                     'images', 'videos',
                     'delete_images', 'delete_videos',
                     'amenities', 'utilities',
+                    'image_order',
                 ])
             );
 
             $this->applyGeocoding($property);
+            $this->reorderExistingImages($property, $request);
             $this->deleteSelectedMedia($property, $request);
             $this->handleUploads($property, $request);
             $this->syncPivots($property, $request);
+            $this->normalizeImages($property);
 
             DB::commit();
 
@@ -179,7 +193,6 @@ class PropertyController extends Controller
         ];
     }
 
-   
     protected function applyGeocoding(Property $property): void
     {
         $coords = $this->geocoder->geocode(
@@ -197,27 +210,50 @@ class PropertyController extends Controller
         }
     }
 
+    protected function reorderExistingImages(Property $property, PropertyRequest $request): void
+    {
+        $order = $request->input('image_order', []);
+        if (!is_array($order) || empty($order)) {
+            return;
+        }
+
+        $validIds = $property->images()
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->toArray();
+
+        foreach (array_values($order) as $idx => $id) {
+            $id = (int) $id;
+            if (!in_array($id, $validIds, true)) {
+                continue;
+            }
+            PropertyImage::where('id', $id)
+                ->where('property_id', $property->id)
+                ->update(['order' => $idx]);
+        }
+    }
+
     protected function handleUploads(Property $property, PropertyRequest $request): void
     {
         if ($request->hasFile('images')) {
-            $existing = $property->images()->count();
+            $maxOrder = (int) ($property->images()->max('order') ?? -1);
             foreach ($request->file('images') as $i => $file) {
                 $path = $this->imageStorage->store($file, 'properties/images');
                 $property->images()->create([
                     'image_path' => $path,
-                    'is_primary' => $existing === 0 && $i === 0,
-                    'order'      => $existing + $i,
+                    'is_primary' => false,
+                    'order'      => $maxOrder + 1 + $i,
                 ]);
             }
         }
 
         if ($request->hasFile('videos')) {
-            $existing = $property->videos()->count();
+            $maxOrder = (int) ($property->videos()->max('order') ?? -1);
             foreach ($request->file('videos') as $i => $file) {
                 $path = $this->videoStorage->store($file, 'properties/videos');
                 $property->videos()->create([
                     'video_path' => $path,
-                    'order'      => $existing + $i,
+                    'order'      => $maxOrder + 1 + $i,
                 ]);
             }
         }
@@ -248,12 +284,31 @@ class PropertyController extends Controller
         }
     }
 
-    /**
-     * Sincroniza amenities y utilities (relaciones muchos-a-muchos).
-     */
     protected function syncPivots(Property $property, PropertyRequest $request): void
     {
         $property->amenities()->sync($request->input('amenities', []));
         $property->utilities()->sync($request->input('utilities', []));
+    }
+
+    protected function normalizeImages(Property $property): void
+    {
+        $images = $property->images()
+            ->orderBy('order')
+            ->orderBy('id')
+            ->get();
+
+        if ($images->isEmpty()) {
+            return;
+        }
+
+        foreach ($images as $idx => $image) {
+            $isPrimary = ($idx === 0);
+            if ((int) $image->order !== $idx || (bool) $image->is_primary !== $isPrimary) {
+                $image->update([
+                    'order'      => $idx,
+                    'is_primary' => $isPrimary,
+                ]);
+            }
+        }
     }
 }

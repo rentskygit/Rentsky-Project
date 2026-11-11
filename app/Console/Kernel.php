@@ -18,6 +18,8 @@ class Kernel extends ConsoleKernel
         require base_path('routes/console.php');
     }
 }
-protected $commands = [
-    \Laravel\Tinker\Console\TinkerCommand::class,
-];
+    protected $commands = [
+        \Laravel\Tinker\Console\TinkerCommand::class,
+    ];
+
+

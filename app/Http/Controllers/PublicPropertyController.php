@@ -24,9 +24,9 @@ class PublicPropertyController extends Controller
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where(function ($q) use ($s) {
-                $q->where('address', 'LIKE', "%{$s}%")
-                  ->orWhere('city', 'LIKE', "%{$s}%")
-                  ->orWhere('zip_code', 'LIKE', "%{$s}%");
+                $q->where('address', 'ILIKE', "%{$s}%")
+                  ->orWhere('city', 'ILIKE', "%{$s}%")
+                  ->orWhere('zip_code', 'ILIKE', "%{$s}%");
             });
         }
 

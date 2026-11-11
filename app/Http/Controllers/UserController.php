@@ -7,7 +7,6 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\ModulePermissionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -34,13 +33,24 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => $request->password,
         ]);
 
-        return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
+        $clientRole = Role::where('id', 2)
+            ->orWhere('name', 'Client')
+            ->orWhere('slug', 'client')
+            ->first();
+
+        if ($clientRole) {
+            $user->roles()->syncWithoutDetaching([$clientRole->id]);
+        }
+
+        $this->permissionService->invalidateUserCache($user);
+
+        return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
 
     public function show(string $id)
@@ -52,14 +62,51 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $roles = Role::active()->orderBy('name')->get();
-        $modules = Module::active()->orderBy('order')->get();
+
+        $modules = Module::active()
+            ->navigation()
+            ->private()
+            ->roots()
+            ->with(['children' => fn($q) => $q->active()->navigation()->private()->orderBy('order')])
+            ->orderBy('order')
+            ->get();
 
         $user->load(['roles', 'moduleOverrides']);
 
         $selectedRoles = old('roles', $user->roles->pluck('id')->toArray());
-        $selectedModules = old('modules', $user->moduleOverrides()->wherePivot('granted', true)->pluck('modules.id')->toArray());
 
-        return view('users.edit', compact('user', 'roles', 'modules', 'selectedRoles', 'selectedModules'));
+        $roleModuleIds = $user->roles()
+            ->with('modules:id')
+            ->get()
+            ->pluck('modules')
+            ->flatten()
+            ->pluck('id')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $overridesMap = $user->moduleOverridesMap();
+
+        $currentAccess = collect($roleModuleIds);
+
+        foreach ($overridesMap as $moduleId => $granted) {
+            if ($granted) {
+                $currentAccess->push($moduleId);
+            } else {
+                $currentAccess = $currentAccess->reject(fn($id) => (int) $id === (int) $moduleId);
+            }
+        }
+
+        $selectedModules = old('modules', $currentAccess->unique()->values()->toArray());
+
+        return view('users.edit', compact(
+            'user',
+            'roles',
+            'modules',
+            'selectedRoles',
+            'selectedModules',
+            'roleModuleIds'
+        ));
     }
 
     public function update(Request $request, User $user)
@@ -67,9 +114,9 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'roles' => 'array',
+            'roles' => 'nullable|array',
             'roles.*' => 'integer|exists:roles,id',
-            'modules' => 'array',
+            'modules' => 'nullable|array',
             'modules.*' => 'integer|exists:modules,id',
             'is_super_admin' => 'boolean',
         ]);
@@ -80,27 +127,91 @@ class UserController extends Controller
             'is_super_admin' => $request->boolean('is_super_admin'),
         ]);
 
-        // Sincronizar roles
-        $user->roles()->sync($request->input('roles', []));
+        $rolesChanged = false;
 
-        // Sincronizar overrides de módulos
-        $moduleIds = $request->input('modules', []);
-        $sync = [];
-        foreach ($moduleIds as $id) {
-            $sync[$id] = ['granted' => true];
+        if ($request->exists('roles_present')) {
+            $roles = $request->input('roles', []) ?? [];
+            $roles = array_values(array_unique(array_map('intval', array_filter($roles))));
+
+            $clientRole = Role::where('id', 2)
+                ->orWhere('name', 'Client')
+                ->orWhere('slug', 'client')
+                ->first();
+
+            if (empty($roles) && $clientRole) {
+                $roles = [$clientRole->id];
+            }
+
+            $currentRoleIds = $user->roles()
+                ->pluck('roles.id')
+                ->map(fn($id) => (int) $id)
+                ->sort()
+                ->values()
+                ->toArray();
+
+            $newRoleIds = collect($roles)->map(fn($id) => (int) $id)->sort()->values()->toArray();
+
+            $rolesChanged = $currentRoleIds !== $newRoleIds;
+
+            $user->roles()->sync($roles);
+
+            if ($rolesChanged) {
+                $user->moduleOverrides()->sync([]);
+            }
         }
-        $user->moduleOverrides()->sync($sync);
 
-        // Invalidar caché de permisos
+        if ($request->exists('modules_present') && !$rolesChanged) {
+            $publicModuleIds = Module::where('is_public', true)
+                ->pluck('id')
+                ->map(fn($id) => (int) $id)
+                ->toArray();
+
+            $checkedModules = collect($request->input('modules', []) ?? [])
+                ->map(fn($id) => (int) $id)
+                ->reject(fn($id) => in_array($id, $publicModuleIds, true))
+                ->values()
+                ->toArray();
+
+            $user->load('roles');
+
+            $roleModuleIds = $user->roles()
+                ->with('modules:id')
+                ->get()
+                ->pluck('modules')
+                ->flatten()
+                ->pluck('id')
+                ->unique()
+                ->map(fn($id) => (int) $id)
+                ->reject(fn($id) => in_array($id, $publicModuleIds, true))
+                ->values()
+                ->toArray();
+
+            $sync = [];
+
+            foreach ($checkedModules as $moduleId) {
+                if (!in_array($moduleId, $roleModuleIds, true)) {
+                    $sync[$moduleId] = ['granted' => true];
+                }
+            }
+
+            foreach ($roleModuleIds as $roleModuleId) {
+                if (!in_array($roleModuleId, $checkedModules, true)) {
+                    $sync[$roleModuleId] = ['granted' => false];
+                }
+            }
+
+            $user->moduleOverrides()->sync($sync);
+        }
+
         $this->permissionService->invalidateUserCache($user);
 
-        return redirect()->route('users.index')->with('success', 'Usuario actualizado exitosamente.');
+        return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }
 
     public function destroy(User $user)
     {
         $this->permissionService->invalidateUserCache($user);
         $user->delete();
-        return redirect()->route('users.index')->with('success', 'Usuario eliminado exitosamente.');
+        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
     }
 }

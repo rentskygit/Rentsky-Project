@@ -19,14 +19,15 @@ class Module extends Model
         'order',
         'is_active',
         'is_dashboard',
+        'is_public',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
-        'is_dashboard' => 'boolean',
-        'parent_id' => 'integer',
+        'is_active'     => 'boolean',
+        'is_dashboard'  => 'boolean',
+        'is_public'     => 'boolean',
+        'parent_id'     => 'integer',
     ];
-
 
     public function parent()
     {
@@ -40,20 +41,29 @@ class Module extends Model
 
     public function roles()
     {
-    return $this->belongsToMany(Role::class, 'role_module');
+        return $this->belongsToMany(Role::class, 'role_module');
     }
 
     public function users()
     {
-    return $this->belongsToMany(User::class, 'module_user')
-                ->withPivot('granted')
-                ->withTimestamps();
+        return $this->belongsToMany(User::class, 'module_user')
+                    ->withPivot('granted')
+                    ->withTimestamps();
     }
-
 
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopePublic($query)
+    {
+        return $query->where('is_public', true);
+    }
+
+    public function scopePrivate($query)
+    {
+        return $query->where('is_public', false);
     }
 
     public function scopeNavigation($query)
@@ -71,7 +81,6 @@ class Module extends Model
         return $query->whereNull('parent_id');
     }
 
-
     public function getUrlAttribute($value)
     {
         if ($this->route && !$value) {
@@ -83,7 +92,6 @@ class Module extends Model
         }
         return $value ?? '#';
     }
-
 
     public function isActive()
     {

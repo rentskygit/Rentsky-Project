@@ -29,6 +29,7 @@ class Property extends Model
         'virtual_tour_url',
         'description',
         'restrictions',
+        'internal_restrictions',
         'pet_friendly',
         'max_pets',
         'allow_cats',
@@ -64,7 +65,6 @@ class Property extends Model
         'available_date'  => 'date',
     ];
 
-    // ── Relaciones ──
 
     public function category()     { return $this->belongsTo(PropertyCategory::class, 'property_category_id'); }
     public function leaseTerm()    { return $this->belongsTo(PropertyOption::class, 'lease_term_id'); }
@@ -87,13 +87,12 @@ class Property extends Model
     public function primaryImage() { return $this->hasOne(PropertyImage::class)->where('is_primary', true); }
     public function videos()       { return $this->hasMany(PropertyVideo::class)->orderBy('order'); }
     public function views()        { return $this->hasMany(PropertyView::class); }
+    public function showings()     { return $this->hasMany(\App\Models\Showing::class); }
 
-    // ── Scopes ──
 
     public function scopeActive($q)      { return $q->where('status', 'active'); }
     public function scopePetFriendly($q) { return $q->where('pet_friendly', true); }
 
-    // ── Eventos ──
 
     protected static function booted(): void
     {

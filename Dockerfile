@@ -11,6 +11,15 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo \
     && docker-php-ext-install zip
 
+RUN { \
+        echo 'upload_max_filesize = 25M'; \
+        echo 'post_max_size = 500M'; \
+        echo 'memory_limit = 512M'; \
+        echo 'max_file_uploads = 50'; \
+        echo 'max_execution_time = 300'; \
+        echo 'max_input_time = 300'; \
+    } > /usr/local/etc/php/conf.d/zz-uploads.ini
+
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
@@ -28,11 +37,8 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage/framework/views
 
-# RUN composer dump-autoload --optimize
-# RUN composer run-script post-autoload-dump
 RUN composer dump-autoload --optimize --no-scripts
 RUN composer run-script post-autoload-dump || true
-
 
 EXPOSE 9000
 CMD ["php-fpm"]

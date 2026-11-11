@@ -3,10 +3,10 @@
 namespace App\Services;
 
 use App\Models\Module;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
-
 
 class ModulePermissionService
 {
@@ -33,10 +33,14 @@ class ModulePermissionService
         return Module::active()
             ->navigation()
             ->roots()
-            ->whereIn('id', $allowedIds)
+            ->where(function ($q) use ($allowedIds) {
+                $q->whereIn('id', $allowedIds)
+                  ->orWhereHas('children', fn($c) => $c->active()->navigation()->whereIn('id', $allowedIds));
+            })
             ->with(['children' => function ($q) use ($allowedIds) {
-                $q->active()->navigation()->whereIn('id', $allowedIds);
+                $q->active()->navigation()->whereIn('id', $allowedIds)->orderBy('order');
             }])
+            ->orderBy('order')
             ->get();
     }
 
@@ -76,5 +80,23 @@ class ModulePermissionService
     public function invalidateUserCache(User $user): void
     {
         Cache::forget("user.{$user->id}.modules.allowed");
+    }
+
+    public function invalidateRoleCache(Role $role): void
+    {
+        $userIds = $role->users()->pluck('users.id');
+
+        foreach ($userIds as $userId) {
+            Cache::forget("user.{$userId}.modules.allowed");
+        }
+    }
+
+    public function invalidateAllCache(): void
+    {
+        $userIds = User::pluck('id');
+
+        foreach ($userIds as $userId) {
+            Cache::forget("user.{$userId}.modules.allowed");
+        }
     }
 }

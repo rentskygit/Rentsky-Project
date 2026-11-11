@@ -12,7 +12,7 @@
     <style>
         :root {
             --brand-primary: #1B1B18;
-            --brand-secondary: #004e6f;
+            --brand-secondary: #374fa7;
             --brand-muted: #706f6c;
             --brand-light: #FDFDFC;
         }
@@ -90,7 +90,7 @@
         .form-control:focus {
             outline: none;
             border-color: var(--brand-secondary);
-            box-shadow: 0 0 0 3px rgba(245, 48, 3, 0.1);
+            box-shadow: 0 0 0 3px rgba(55, 79, 167, 0.1);
         }
 
         .form-control.is-invalid {
@@ -98,7 +98,7 @@
         }
 
         .invalid-feedback {
-            color: #dc2626;
+            color: #ff0000;
             font-size: 0.85rem;
             margin-top: 0.35rem;
         }
@@ -122,9 +122,9 @@
         }
 
         .btn-auth:hover {
-            background: #d42b02;
+            background: #000000;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(245, 48, 3, 0.3);
+            box-shadow: 0 4px 12px rgba(55, 79, 167, 0.3);
         }
 
         .auth-footer {
@@ -173,7 +173,57 @@
             cursor: pointer;
             color: var(--brand-primary);
         }
+
+        .phone-field .iti {
+            width: 100%;
+        }
+
+        .phone-field .iti__tel-input {
+            width: 100%;
+            padding: 0.7rem 0.875rem;
+            font-size: 0.95rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0 0.5rem 0.5rem 0;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .phone-field .iti__tel-input:focus {
+            outline: none;
+            border-color: var(--brand-secondary);
+            box-shadow: 0 0 0 3px rgba(55, 79, 167, 0.1);
+        }
+
+        .phone-field .iti--separate-dial-code .iti__selected-dial-code {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--brand-primary);
+        }
+
+        .phone-field .iti__selected-country {
+            border-radius: 0.5rem 0 0 0.5rem;
+            background: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-right: none;
+            padding: 0 0.5rem;
+        }
+
+        .phone-field .iti__selected-country:hover {
+            background: #f3f4f6;
+        }
+
+        .phone-field .iti__arrow {
+            border-top-color: var(--brand-muted);
+        }
+
+        .phone-field .iti__country-list {
+            max-height: 280px;
+            font-size: 0.9rem;
+            z-index: 100;
+        }
     </style>
+
+    @stack('styles')
 </head>
 <body>
     <div class="auth-card">
@@ -191,5 +241,7 @@
 
         @yield('content')
     </div>
+
+    @stack('scripts')
 </body>
 </html>

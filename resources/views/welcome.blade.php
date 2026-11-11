@@ -1,866 +1,880 @@
 @extends('layouts.app')
-
-@section('title', 'Find your home in Boston')
+@section('title', 'Find your home in Massachusetts')
 
 @push('styles')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-    .landing-hero {
-        margin: -2rem -2rem 2rem -2rem;
-        background: linear-gradient(135deg, #1B1B18 0%, #2d2d2a 100%);
+    .home-hero {
+        background: linear-gradient(135deg, #0a0a0a 0%, #16203d 100%);
         color: white;
-        border-radius: 1rem;
+        padding: 5rem 2rem 6rem;
+        margin: -2rem -2rem 0 -2rem;
+        position: relative;
         overflow: hidden;
     }
-    .hero-content {
+    .home-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(55, 79, 167, 0.22) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .home-hero-inner {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 4rem 2rem;
-        display: flex;
+        position: relative;
+        z-index: 2;
+    }
+    .home-hero-eyebrow {
+        display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 2rem;
-    }
-    .hero-text h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.2; }
-    .hero-text h1 span { color: var(--brand-secondary); }
-    .hero-text p { font-size: 1.15rem; color: #a0a09a; margin-bottom: 2rem; max-width: 500px; }
-    .hero-badge {
-        display: inline-block; background: var(--brand-secondary); color: white;
-        padding: 0.3rem 1rem; border-radius: 9999px; font-size: 0.8rem;
-        font-weight: 600; margin-bottom: 1rem; text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    .hero-image {
-        flex-shrink: 0; width: 260px; height: 260px;
-        background: rgba(255,255,255,0.05); border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 7rem; color: var(--brand-secondary);
-        border: 2px solid rgba(245, 48, 3, 0.2);
-    }
-
-    /* ═══════════════════════════════════════════════════════
-       SECCIÓN MAPA + LISTA
-       ═══════════════════════════════════════════════════════ */
-    .section-header { margin: 3rem 0 1.5rem; }
-    .section-title {
-        font-size: 1.75rem; font-weight: 700; color: var(--brand-primary);
-        display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
-    }
-    .section-title span { color: var(--brand-secondary); }
-    .section-subtitle { color: var(--brand-muted); margin-top: 0.25rem; }
-
-    .properties-layout {
-        display: grid;
-        grid-template-columns: 1.3fr 1fr;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-        min-height: 620px;
-    }
-
-    .map-wrapper {
-        background: white; border-radius: 1rem; overflow: hidden;
-        border: 1px solid #e5e7eb; position: relative;
-    }
-    #propertyMap { width: 100%; height: 100%; min-height: 620px; }
-
-    .list-wrapper {
-        background: white; border-radius: 1rem;
-        border: 1px solid #e5e7eb; display: flex; flex-direction: column;
-        max-height: 620px;
-    }
-    .list-header {
-        padding: 1rem 1.25rem; border-bottom: 1px solid #f3f4f6;
-        background: #f9fafb;
-    }
-    .list-header label {
-        font-size: 0.8rem; font-weight: 700; color: var(--brand-muted);
-        text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;
-    }
-    #addressSelect {
-        width: 100%; padding: 0.6rem 2.5rem 0.6rem 0.875rem;
-        border: 1px solid #d1d5db; border-radius: 0.5rem;
-        font-size: 0.9rem; background: white; cursor: pointer;
-        appearance: none; -webkit-appearance: none;
-        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23706f6c'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: right 0.9rem center;
-        background-size: 14px 14px;
-    }
-    #addressSelect:focus {
-        outline: none; border-color: var(--brand-secondary);
-        box-shadow: 0 0 0 3px rgba(245, 48, 3, 0.1);
-    }
-
-    .properties-list {
-        flex: 1; overflow-y: auto; padding: 0.75rem;
-    }
-
-    .property-item {
-        display: flex; gap: 0.75rem; padding: 0.75rem;
-        border-radius: 0.5rem; cursor: pointer;
-        transition: all 0.2s ease; border: 1px solid transparent;
-        margin-bottom: 0.5rem;
-    }
-    .property-item:hover { background: #f9fafb; border-color: #e5e7eb; }
-    .property-item.active { background: #fff5f2; border-color: var(--brand-secondary); }
-    .property-item-img {
-        width: 90px; height: 90px; flex-shrink: 0;
-        border-radius: 0.5rem; overflow: hidden; background: #f3f4f6;
-        display: flex; align-items: center; justify-content: center;
-    }
-    .property-item-img img { width: 100%; height: 100%; object-fit: cover; }
-    .property-item-img i { color: #d1d5db; font-size: 1.75rem; }
-    .property-item-body { flex: 1; min-width: 0; }
-    .property-item-title {
-        font-weight: 700; font-size: 0.9rem; color: var(--brand-primary);
-        margin-bottom: 0.15rem; white-space: nowrap; overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .property-item-addr {
-        font-size: 0.8rem; color: var(--brand-muted);
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .property-item-meta {
-        display: flex; gap: 0.5rem; margin-top: 0.4rem; flex-wrap: wrap;
-    }
-    .property-item-tag {
-        font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 9999px;
-        background: #f3f4f6; color: var(--brand-muted); font-weight: 600;
-    }
-    .property-item-tag.pet { background: #dcfce7; color: #166534; }
-    .property-item-tag.rent { background: #fff5f2; color: var(--brand-secondary); }
-    .empty-list { padding: 3rem 1rem; text-align: center; color: var(--brand-muted); }
-    .empty-list i { font-size: 2.5rem; color: #d1d5db; display: block; margin-bottom: 0.75rem; }
-
-    /* ═══════════════════════════════════════════════════════
-       CATEGORÍAS
-       ═══════════════════════════════════════════════════════ */
-    .categories-grid {
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 1rem; margin-bottom: 3rem;
-    }
-    .category-card {
-        background: white; border: 1px solid #e5e7eb; border-radius: 0.75rem;
-        padding: 1.5rem 1rem; text-align: center; cursor: pointer;
-        transition: all 0.3s ease; text-decoration: none; color: var(--brand-primary);
-        display: block;
-    }
-    .category-card:hover {
-        transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-        border-color: var(--brand-secondary);
-    }
-    .category-card .category-icon {
-        font-size: 2.5rem; display: block; margin-bottom: 0.5rem;
-        color: var(--brand-secondary);
-    }
-    .category-card .category-name { font-weight: 600; font-size: 0.95rem; }
-    .category-card .category-count { font-size: 0.8rem; color: var(--brand-muted); }
-
-    /* ═══════════════════════════════════════════════════════
-       MODAL RICO
-       ═══════════════════════════════════════════════════════ */
-    .prop-modal-backdrop {
-        position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-        z-index: 9999; display: none; align-items: center; justify-content: center;
-        padding: 1.5rem;
-    }
-    .prop-modal-backdrop.open { display: flex; }
-
-    .prop-modal {
-        background: white; border-radius: 1rem; max-width: 1080px;
-        width: 100%; max-height: 90vh; overflow: hidden;
-        display: flex; flex-direction: column;
-    }
-    .prop-modal-header {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 1rem 1.5rem; border-bottom: 1px solid #f3f4f6;
-        flex-shrink: 0;
-    }
-    .prop-modal-header h2 { font-size: 1.05rem; font-weight: 700; margin: 0; }
-    .prop-modal-close {
-        background: none; border: none; font-size: 1.5rem; cursor: pointer;
-        color: var(--brand-muted); width: 32px; height: 32px;
-        border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        transition: all 0.15s;
-    }
-    .prop-modal-close:hover { background: #f3f4f6; color: var(--brand-primary); }
-
-    .prop-modal-body {
-        display: grid;
-        grid-template-columns: 1.1fr 1fr;
-        gap: 0;
-        overflow: hidden;
-        padding: 0;
-        flex: 1;
-        min-height: 0;
-    }
-
-    .prop-modal-left {
-        padding: 1.5rem;
-        overflow-y: auto;
-        border-right: 1px solid #f3f4f6;
-        background: #fafafa;
-    }
-    .prop-modal-right {
-        padding: 1.5rem;
-        overflow-y: auto;
-        background: white;
-    }
-
-    .prop-modal-gallery-main {
-        width: 100%;
-        aspect-ratio: 4/3;
-        border-radius: 0.75rem;
-        overflow: hidden;
-        background: #f3f4f6;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .prop-modal-gallery-main img { width: 100%; height: 100%; object-fit: cover; }
-
-    .prop-modal-thumbs {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 0.4rem;
-        margin-top: 0.5rem;
-    }
-    .prop-modal-thumb {
-        aspect-ratio: 1;
-        border-radius: 0.4rem;
-        overflow: hidden;
-        border: 2px solid #e5e7eb;
-        background: none;
-        padding: 0;
-        cursor: pointer;
-        transition: border-color 0.15s;
-    }
-    .prop-modal-thumb.active { border-color: var(--brand-secondary); }
-    .prop-modal-thumb:hover { border-color: var(--brand-secondary); }
-    .prop-modal-thumb img { width: 100%; height: 100%; object-fit: cover; }
-
-    .prop-modal-videos {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 0.6rem;
-        margin-top: 0.75rem;
-    }
-    .prop-modal-videos video {
-        width: 100%;
-        border-radius: 0.5rem;
-        background: black;
-    }
-
-    /* Modal - precio hero */
-    .prop-m-price-hero {
-        display: flex;
-        align-items: baseline;
         gap: 0.5rem;
-        margin-bottom: 1rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #f3f4f6;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 1.5rem;
     }
-    .prop-m-price {
-        font-size: 1.9rem;
-        font-weight: 800;
-        color: var(--brand-secondary);
+    .home-hero-eyebrow::before {
+        content: '';
+        width: 24px;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.4);
+    }
+    .home-hero-title {
+        font-family: var(--font-display);
+        font-size: clamp(2.5rem, 6vw, 4.5rem);
+        font-weight: 700;
+        line-height: 1.05;
+        letter-spacing: -0.035em;
+        margin-bottom: 1.5rem;
+        max-width: 900px;
+    }
+    .home-hero-title em {
+        font-style: italic;
+        color: #7d92e0;
+    }
+    .home-hero-subtitle {
+        font-size: clamp(1rem, 1.5vw, 1.15rem);
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.6;
+        max-width: 640px;
+        margin-bottom: 2.5rem;
+    }
+    .home-hero-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .btn-hero-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.95rem 1.75rem;
+        background: white;
+        color: #0a0a0a;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.92rem;
+        text-decoration: none;
+        transition: all 0.2s;
+        letter-spacing: 0.01em;
+    }
+    .btn-hero-primary:hover {
+        background: #f5f5f5;
+        color: #0a0a0a;
+        text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .btn-hero-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.95rem 1.75rem;
+        background: transparent;
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .btn-hero-secondary:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: white;
+        text-decoration: none;
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .home-hero-stats {
+        display: flex;
+        gap: 3rem;
+        margin-top: 4rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        flex-wrap: wrap;
+    }
+    .home-hero-stat-value {
+        font-family: var(--font-display);
+        font-size: 1.85rem;
+        font-weight: 700;
         letter-spacing: -0.02em;
         line-height: 1;
+        margin-bottom: 0.35rem;
     }
-    .prop-m-price-period {
-        font-size: 0.9rem;
-        color: var(--brand-muted);
+    .home-hero-stat-label {
+        font-size: 0.78rem;
+        color: rgba(255, 255, 255, 0.55);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
         font-weight: 500;
     }
 
-    /* Specs inline */
-    .prop-m-specs {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        padding-bottom: 1rem;
-        margin-bottom: 1rem;
-        border-bottom: 1px solid #f3f4f6;
+    .home-section {
+        padding: 5rem 0;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-left: 2rem;
+        padding-right: 2rem;
     }
-    .prop-m-spec {
-        display: flex;
-        align-items: center;
-        gap: 0.35rem;
-        font-size: 0.88rem;
-        font-weight: 600;
-        color: var(--brand-primary);
-    }
-    .prop-m-spec i { color: var(--brand-muted); }
-
-    /* Available */
-    .prop-m-available {
-        background: #fff5f2;
-        border: 1px solid #fbd8ce;
-        border-radius: 0.5rem;
-        padding: 0.65rem 0.85rem;
-        font-size: 0.88rem;
-        color: var(--brand-primary);
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 1.25rem;
-    }
-    .prop-m-available i { color: var(--brand-secondary); font-size: 1rem; }
-
-    /* Secciones del modal */
-    .prop-m-section { margin-bottom: 1.25rem; }
-    .prop-m-section-title {
-        font-size: 0.82rem;
-        font-weight: 700;
-        color: var(--brand-primary);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.6rem;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-    }
-    .prop-m-section-title i { color: var(--brand-secondary); font-size: 0.9rem; }
-    .prop-m-text {
-        font-size: 0.88rem;
-        color: var(--brand-muted);
-        line-height: 1.65;
-        white-space: pre-line;
-        margin: 0;
-    }
-
-    /* Info rows */
-    .prop-m-info-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        font-size: 0.85rem;
-    }
-    .prop-m-info-row {
+    .home-section-header {
         display: flex;
         justify-content: space-between;
-        gap: 0.75rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px dashed #f3f4f6;
+        align-items: flex-end;
+        margin-bottom: 3rem;
+        gap: 2rem;
+        flex-wrap: wrap;
     }
-    .prop-m-info-row:last-child { border-bottom: none; padding-bottom: 0; }
-    .prop-m-info-label { color: var(--brand-muted); }
-    .prop-m-info-value { font-weight: 700; color: var(--brand-primary); text-align: right; }
-
-    /* Chips */
-    .prop-m-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-    .prop-m-chip {
+    .home-section-eyebrow {
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
-        padding: 0.35rem 0.7rem;
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 9999px;
-        font-size: 0.78rem;
+        gap: 0.5rem;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
         font-weight: 600;
-        color: var(--brand-primary);
+        color: var(--brand-secondary);
+        margin-bottom: 0.75rem;
     }
-    .prop-m-chip i { color: var(--brand-secondary); font-size: 0.85rem; }
-    .prop-m-chip.pet {
-        background: #fff5f2;
-        border-color: #fbd8ce;
+    .home-section-eyebrow::before {
+        content: '';
+        width: 24px;
+        height: 1px;
+        background: var(--brand-secondary);
+    }
+    .home-section-title {
+        font-family: var(--font-display);
+        font-size: clamp(1.85rem, 3vw, 2.5rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+        color: var(--brand-primary);
+        max-width: 600px;
+    }
+    .home-section-title em {
+        font-style: italic;
         color: var(--brand-secondary);
     }
 
-    /* Screening list */
-    .prop-m-screening {
-        list-style: none;
+    /* ═══════════════════════════════════════════════════════
+       PROCESS CAROUSEL
+       ═══════════════════════════════════════════════════════ */
+    .process-progress {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2.5rem;
+        gap: 0.5rem;
+    }
+    .process-progress-step {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1rem;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 9999px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+        color: var(--brand-muted);
+        font-size: 0.83rem;
+        font-weight: 500;
+        flex-shrink: 0;
+    }
+    .process-progress-step:hover {
+        border-color: var(--brand-primary);
+        color: var(--brand-primary);
+    }
+    .process-progress-step.active {
+        background: var(--brand-secondary);
+        border-color: var(--brand-secondary);
+        color: white;
+    }
+    .process-progress-step.done {
+        border-color: var(--brand-secondary);
+        color: var(--brand-secondary);
+    }
+    .process-progress-num {
+        font-weight: 700;
+        font-size: 0.72rem;
+        letter-spacing: 0.05em;
+    }
+    .process-progress-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+    .process-progress-line {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+        min-width: 12px;
+    }
+
+    .process-carousel {
+        position: relative;
+    }
+    .process-track-wrap {
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+    }
+    .process-track {
+        display: flex;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: transform;
+    }
+    .process-slide {
+        min-width: 100%;
         padding: 0;
-        margin: 0;
+    }
+    .process-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 4rem 3rem;
+        text-align: center;
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        align-items: center;
+        min-height: 380px;
+        justify-content: center;
     }
-    .prop-m-screening li {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
-        font-size: 0.83rem;
-        color: var(--brand-primary);
-        line-height: 1.55;
-    }
-    .prop-m-screening li i {
+    .process-card-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        background: rgba(55, 79, 167, 0.08);
         color: var(--brand-secondary);
-        font-size: 0.95rem;
-        flex-shrink: 0;
-        margin-top: 0.15rem;
-    }
-
-    /* Restrictions */
-    .prop-m-restrictions {
-        background: #fef3c7;
-        border: 1px solid #fde68a;
-        border-radius: 0.5rem;
-        padding: 0.75rem 0.9rem;
-        font-size: 0.83rem;
-        color: #78350f;
-        line-height: 1.6;
-        white-space: pre-line;
-    }
-
-    /* CTA del modal */
-    .prop-m-cta {
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 2.2rem;
+        margin-bottom: 1.5rem;
+    }
+    .process-card-num {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        font-weight: 700;
+        color: var(--brand-muted);
+        margin-bottom: 0.75rem;
+    }
+    .process-card-title {
+        font-family: var(--font-display);
+        font-size: clamp(1.5rem, 2.5vw, 2rem);
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        color: var(--brand-primary);
+        margin-bottom: 1rem;
+        max-width: 600px;
+    }
+    .process-card-desc {
+        font-size: 1rem;
+        color: var(--brand-muted);
+        line-height: 1.65;
+        max-width: 560px;
+        margin: 0 auto 2rem;
+    }
+    .btn-process {
+        display: inline-flex;
+        align-items: center;
         gap: 0.5rem;
-        padding: 0.8rem;
+        padding: 0.85rem 1.75rem;
         background: var(--brand-secondary);
         color: white;
-        border-radius: 0.5rem;
+        border-radius: 6px;
         font-weight: 700;
         font-size: 0.9rem;
         text-decoration: none;
         transition: all 0.2s;
-        margin-top: 0.5rem;
+        letter-spacing: 0.01em;
     }
-    .prop-m-cta:hover {
-        background: #d42b02;
+    .btn-process:hover {
+        background: #2a3d85;
         color: white;
         text-decoration: none;
         transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(55, 79, 167, 0.25);
     }
 
-    /* ═══════════════════════════════════════════════════════
-       RESPONSIVE
-       ═══════════════════════════════════════════════════════ */
-    @media (max-width: 1024px) {
-        .properties-layout { grid-template-columns: 1fr; }
-        .list-wrapper { max-height: 500px; }
-        #propertyMap { min-height: 400px; }
+    .process-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--brand-secondary);
+        border: 2px solid white;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        z-index: 5;
+        box-shadow: 0 8px 24px rgba(55, 79, 167, 0.4), 0 2px 6px rgba(0, 0, 0, 0.15);
+        font-size: 1.35rem;
     }
-    @media (max-width: 900px) {
-        .prop-modal-body { grid-template-columns: 1fr; }
-        .prop-modal-left { border-right: none; border-bottom: 1px solid #f3f4f6; max-height: 320px; }
-        .prop-modal-right { max-height: 60vh; }
+    .process-nav:hover {
+        background: #2a3d85;
+        border-color: white;    
+        color: white;
+        transform: translateY(-50%) scale(1.08);
     }
+    .process-nav.prev { left: -28px; }
+    .process-nav.next { right: -28px; }
+
+    .process-dots {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+    .process-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--border-strong);
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        padding: 0;
+    }
+    .process-dot.active {
+        background: var(--brand-secondary);
+        width: 24px;
+        border-radius: 4px;
+    }
+
+    .home-why-section {
+        background: #fafafa;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+    }
+    .home-why-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+    .home-why-card {
+        padding: 2rem 1.5rem;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+    }
+    .home-why-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        background: rgba(55, 79, 167, 0.08);
+        color: var(--brand-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        margin-bottom: 1.25rem;
+    }
+    .home-why-title {
+        font-family: var(--font-display);
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--brand-primary);
+        margin-bottom: 0.5rem;
+    }
+    .home-why-desc {
+        font-size: 0.88rem;
+        color: var(--brand-muted);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .testimonials-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    .testimonial-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+    }
+    .testimonial-stars {
+        color: #f59e0b;
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+        letter-spacing: 0.1em;
+    }
+    .testimonial-quote {
+        font-family: var(--font-display);
+        font-size: 0.95rem;
+        color: var(--brand-primary);
+        line-height: 1.65;
+        margin-bottom: 1.5rem;
+        flex: 1;
+        font-style: italic;
+    }
+    .testimonial-author {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border);
+    }
+    .testimonial-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--brand-secondary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    .testimonial-author-info { display: flex; flex-direction: column; }
+    .testimonial-author-name { font-size: 0.88rem; font-weight: 600; color: var(--brand-primary); }
+    .testimonial-author-role { font-size: 0.75rem; color: var(--brand-muted); }
+
+    .home-cta {
+        background: linear-gradient(135deg, #0a0a0a 0%, #16203d 100%);
+        color: white;
+        padding: 5rem 2rem;
+        text-align: center;
+        border-radius: 16px;
+        margin: 0 2rem 3rem;
+    }
+    .home-cta-inner {
+        max-width: 640px;
+        margin: 0 auto;
+    }
+    .home-cta h2 {
+        font-family: var(--font-display);
+        font-size: clamp(1.85rem, 3.5vw, 2.75rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+        margin-bottom: 1rem;
+    }
+    .home-cta h2 em {
+        font-style: italic;
+        color: #7d92e0;
+    }
+    .home-cta p {
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+
     @media (max-width: 768px) {
-        .hero-content { flex-direction: column; text-align: center; padding: 2.5rem 1.5rem; }
-        .hero-text h1 { font-size: 2rem; }
-        .hero-image { width: 160px; height: 160px; font-size: 4rem; }
-        .landing-hero { margin: -1rem -1rem 2rem -1rem; border-radius: 0.5rem; }
-        .prop-modal-thumbs { grid-template-columns: repeat(4, 1fr); }
+        .home-hero { padding: 3.5rem 1.25rem 4rem; margin: -1rem -1rem 0 -1rem; }
+        .home-hero-title { font-size: 2.25rem; }
+        .home-hero-stats { gap: 2rem; margin-top: 2.5rem; }
+        .home-hero-stat-value { font-size: 1.35rem; }
+        .home-section { padding: 3rem 1.25rem; }
+        .home-section-header { margin-bottom: 2rem; }
+        .testimonial-card { padding: 1.5rem; }
+        .home-cta { margin: 0 1rem 2rem; padding: 3rem 1.25rem; }
+
+        .process-card { padding: 2.5rem 1.5rem; min-height: 320px; }
+        .process-card-icon { width: 64px; height: 64px; font-size: 1.75rem; margin-bottom: 1rem; }
+        .process-progress-label { display: none; }
+        .process-progress-step { padding: 0.55rem 0.75rem; }
+        .process-progress-line { display: none; }
+        .process-nav { width: 36px; height: 36px; font-size: 0.85rem; }
+        .process-nav.prev { left: -8px; }
+        .process-nav.next { right: -8px; }
     }
 </style>
 @endpush
 
 @section('content')
 
-{{-- ── HERO ── --}}
-<section class="landing-hero">
-    <div class="hero-content">
-        <div class="hero-text">
-            <span class="hero-badge">🏙️ Boston, MA</span>
-            <h1>Find your <span>next home</span> in Boston</h1>
-            <p>Explore apartments, studios and suites available. Filter by area, browse the map and find your ideal space.</p>
+<section class="home-hero">
+    <div class="home-hero-inner">
+        <div class="home-hero-eyebrow"> Massachusetts</div>
+        <h1 class="home-hero-title">
+            Find your next home<br>
+            in <em>Massachusetts</em>
+        </h1>
+        <p class="home-hero-subtitle">
+            Thoughtfully curated apartments, responsive support, and a renting experience that actually feels human. Browse our available listings and find the place that fits.
+        </p>
+        <div class="home-hero-actions">
+            <a href="{{ route('apartments.index') }}" class="btn-hero-primary">
+                Browse apartments <i class="bi bi-arrow-right"></i>
+            </a>
+            @guest
+                <a href="{{ route('register') }}" class="btn-hero-secondary">
+                    Create an account
+                </a>
+            @else
+                <a href="{{ route('profile.edit') }}" class="btn-hero-secondary">
+                    My profile
+                </a>
+            @endguest
         </div>
-        <div class="hero-image">🏠</div>
+
+        <div class="home-hero-stats">
+            <div>
+                <div class="home-hero-stat-value">{{ $properties->count() }}</div>
+                <div class="home-hero-stat-label">Available listings</div>
+            </div>
+            <div>
+                <div class="home-hero-stat-value">{{ $categories->count() }}</div>
+                <div class="home-hero-stat-label">Property categories</div>
+            </div>
+            <div>
+                <div class="home-hero-stat-value">24h</div>
+                <div class="home-hero-stat-label">Response time</div>
+            </div>
+        </div>
     </div>
 </section>
 
-{{-- ── MAPA + LISTA ── --}}
-<div class="section-header">
-    <h2 class="section-title">📍 Explore <span>properties</span> on the map</h2>
-    <p class="section-subtitle">Select an address to locate it, or click a property to see the details.</p>
-</div>
-
-<div class="properties-layout">
-    <div class="map-wrapper">
-        <div id="propertyMap"></div>
+<section class="home-section" id="howItWorks">
+    <div class="home-section-header">
+        <div>
+            <div class="home-section-eyebrow">How it works</div>
+            <h2 class="home-section-title">
+                From browsing to <em>move-in</em>
+            </h2>
+        </div>
     </div>
 
-    <div class="list-wrapper">
-        <div class="list-header">
-            <label for="addressSelect">Jump to an address</label>
-            <select id="addressSelect">
-                <option value="">— Select a property —</option>
-                @foreach($properties as $p)
-                    <option value="{{ $p['id'] }}">
-                        {{ $p['address'] }}{{ $p['city'] ? ', ' . $p['city'] : '' }}
-                    </option>
-                @endforeach
-            </select>
+    <div class="process-carousel">
+        <div class="process-progress">
+            <button type="button" class="process-progress-step active" data-step="0">
+                <span class="process-progress-num">01</span>
+                <span class="process-progress-label">Browse</span>
+            </button>
+            <div class="process-progress-line"></div>
+            <button type="button" class="process-progress-step" data-step="1">
+                <span class="process-progress-num">02</span>
+                <span class="process-progress-label">Qualify</span>
+            </button>
+            <div class="process-progress-line"></div>
+            <button type="button" class="process-progress-step" data-step="2">
+                <span class="process-progress-num">03</span>
+                <span class="process-progress-label">Apply</span>
+            </button>
+            <div class="process-progress-line"></div>
+            <button type="button" class="process-progress-step" data-step="3">
+                <span class="process-progress-num">04</span>
+                <span class="process-progress-label">Get approved</span>
+            </button>
         </div>
 
-        <div class="properties-list" id="propertiesList">
-            @if($properties->isEmpty())
-                <div class="empty-list">
-                    <i class="bi bi-house-slash"></i>
-                    <p>No properties published yet.</p>
-                </div>
-            @else
-                @foreach($properties as $p)
-                    <div class="property-item"
-                         data-id="{{ $p['id'] }}"
-                         data-lat="{{ $p['lat'] }}"
-                         data-lng="{{ $p['lng'] }}">
-                        <div class="property-item-img">
-                            @if($p['primary_image'])
-                                <img src="{{ $p['primary_image'] }}" alt="{{ $p['address'] }}">
-                            @else
-                                <i class="bi bi-house"></i>
-                            @endif
-                        </div>
-                        <div class="property-item-body">
-                            <div class="property-item-title">{{ $p['title'] }}</div>
-                            <div class="property-item-addr">{{ $p['address'] }}{{ $p['city'] ? ', ' . $p['city'] : '' }}</div>
-                            <div class="property-item-meta">
-                                @if($p['rent_formatted'])
-                                    <span class="property-item-tag rent">{{ $p['rent_formatted'] }}/mo</span>
-                                @endif
-                                @if($p['unit_type'])
-                                    <span class="property-item-tag">{{ $p['unit_type'] }}</span>
-                                @endif
-                                @if($p['pet_friendly'])
-                                    <span class="property-item-tag pet">🐾 Pet friendly</span>
-                                @endif
-                            </div>
-                        </div>
+        <div class="process-track-wrap">
+            <div class="process-track" id="processTrack">
+
+                <div class="process-slide">
+                    <div class="process-card">
+                        <div class="process-card-icon"><i class="bi bi-search"></i></div>
+                        <div class="process-card-num">Step 01 of 04</div>
+                        <h3 class="process-card-title">Browse our apartments</h3>
+                        <p class="process-card-desc">
+                            Explore all our available listings and find the property that fits your needs. Filter by location, category, and price.
+                        </p>
+                        <a href="{{ route('apartments.index') }}" class="btn-process">
+                            Browse apartments <i class="bi bi-arrow-right"></i>
+                        </a>
                     </div>
-                @endforeach
-            @endif
+                </div>
+
+                <div class="process-slide">
+                    <div class="process-card">
+                        <div class="process-card-icon"><i class="bi bi-clipboard-check"></i></div>
+                        <div class="process-card-num">Step 02 of 04</div>
+                        <h3 class="process-card-title">Complete a qualification</h3>
+                        <p class="process-card-desc">
+                            Fill out a quick qualification form so we can match you with properties that fit your budget and rental history. It only takes a few minutes.
+                        </p>
+                        @auth
+                            <a href="{{ route('qualifications.index') }}" class="btn-process">
+                                Start qualification <i class="bi bi-arrow-right"></i>
+                            </a>
+                        @else
+                            <a href="{{ route('login') }}" class="btn-process">
+                                Sign in to start <i class="bi bi-arrow-right"></i>
+                            </a>
+                        @endauth
+                    </div>
+                </div>
+
+                <div class="process-slide">
+                    <div class="process-card">
+                        <div class="process-card-icon"><i class="bi bi-file-earmark-text"></i></div>
+                        <div class="process-card-num">Step 03 of 04</div>
+                        <h3 class="process-card-title">Submit an application</h3>
+                        <p class="process-card-desc">
+                            Once your qualification is on file, submit a full rental application for the property you're interested in. All the details in one place.
+                        </p>
+                        @auth
+                            <a href="{{ route('applications.index') }}" class="btn-process">
+                                Start application <i class="bi bi-arrow-right"></i>
+                            </a>
+                        @else
+                            <a href="{{ route('login') }}" class="btn-process">
+                                Sign in to apply <i class="bi bi-arrow-right"></i>
+                            </a>
+                        @endauth
+                    </div>
+                </div>
+
+                <div class="process-slide">
+                    <div class="process-card">
+                        <div class="process-card-icon"><i class="bi bi-check-circle"></i></div>
+                        <div class="process-card-num">Step 04 of 04</div>
+                        <h3 class="process-card-title">Get approved</h3>
+                        <p class="process-card-desc">
+                            Our team reviews your application and reaches out to schedule a showing. Once approved, you're one step away from move-in.
+                        </p>
+                        @auth
+                            <a href="{{ route('applications.index') }}" class="btn-process">
+                                Check my application <i class="bi bi-arrow-right"></i>
+                            </a>
+                        @else
+                            <a href="{{ route('register') }}" class="btn-process">
+                                Create an account <i class="bi bi-arrow-right"></i>
+                            </a>
+                        @endauth
+                    </div>
+                </div>
+
+            </div>
+
+            <button type="button" class="process-nav prev" id="processPrev" aria-label="Previous step">
+                <i class="bi bi-arrow-left"></i>
+            </button>
+            <button type="button" class="process-nav next" id="processNext" aria-label="Next step">
+                <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+
+        <div class="process-dots" id="processDots">
+            <button type="button" class="process-dot active" data-step="0"></button>
+            <button type="button" class="process-dot" data-step="1"></button>
+            <button type="button" class="process-dot" data-step="2"></button>
+            <button type="button" class="process-dot" data-step="3"></button>
         </div>
     </div>
-</div>
+</section>
 
-{{-- ── CATEGORÍAS ── --}}
-@if($categories->isNotEmpty())
-    <div class="section-header" style="margin-top: 3rem;">
-        <h2 class="section-title">🏘️ Browse by <span>type</span></h2>
-        <p class="section-subtitle">Filter properties by category.</p>
+<section class="home-why-section">
+    <div class="home-section">
+        <div class="home-section-header">
+            <div>
+                <div class="home-section-eyebrow">Why JCM Realty Group</div>
+                <h2 class="home-section-title">
+                    A rental experience<br>
+                    built for <em>real people</em>
+                </h2>
+            </div>
+        </div>
+
+        <div class="home-why-grid">
+            <div class="home-why-card">
+                <div class="home-why-icon"><i class="bi bi-house-check"></i></div>
+                <h3 class="home-why-title">Curated listings</h3>
+                <p class="home-why-desc">Every property is vetted before it goes live. No bait-and-switch, no hidden surprises.</p>
+            </div>
+            <div class="home-why-card">
+                <div class="home-why-icon"><i class="bi bi-chat-dots"></i></div>
+                <h3 class="home-why-title">Real human support</h3>
+                <p class="home-why-desc">Questions about a listing? Reach out directly and hear back from a real person within a day.</p>
+            </div>
+            <div class="home-why-card">
+                <div class="home-why-icon"><i class="bi bi-shield-check"></i></div>
+                <h3 class="home-why-title">Transparent process</h3>
+                <p class="home-why-desc">Clear pricing, honest timelines, and a straightforward qualification process.</p>
+            </div>
+            <div class="home-why-card">
+                <div class="home-why-icon"><i class="bi bi-geo-alt"></i></div>
+                <h3 class="home-why-title">Local expertise</h3>
+                <p class="home-why-desc">We know Massachusetts and the surrounding neighborhoods — and we help you find the right fit.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@php
+    $testimonials = [
+        [
+            'quote' => 'The team made finding a place feel easy. They responded fast, answered every question, and never once made me feel rushed.',
+            'name'  => 'Sarah M.',
+            'role'  => 'Rented in Lynn',
+        ],
+        [
+            'quote' => 'I was worried about the qualification process, but they walked me through every step. Transparent, patient, and genuinely helpful.',
+            'name'  => 'James T.',
+            'role'  => 'Rented in Chelsea',
+        ],
+        [
+            'quote' => 'They helped me find a place in under a week. I would recommend JCM Realty Group to anyone looking for an apartment in Massachusetts.',
+            'name'  => 'Priya K.',
+            'role'  => 'Rented in New Boston',
+        ],
+    ];
+@endphp
+
+<section class="home-section">
+    <div class="home-section-header">
+        <div>
+            <div class="home-section-eyebrow">Reviews</div>
+            <h2 class="home-section-title">
+                What our <em>tenants</em> say
+            </h2>
+        </div>
     </div>
 
-    <div class="categories-grid">
-        @foreach($categories as $cat)
-            <a href="{{ route('public.properties.index', ['category' => $cat->id]) }}" class="category-card">
-                <i class="bi {{ $cat->icon ?? 'bi-house' }} category-icon"></i>
-                <div class="category-name">{{ $cat->name }}</div>
-                <div class="category-count">{{ $cat->properties_count }} properties</div>
-            </a>
+    <div class="testimonials-grid">
+        @foreach($testimonials as $testimonial)
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                </div>
+                <blockquote class="testimonial-quote">
+                    "{{ $testimonial['quote'] }}"
+                </blockquote>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar">{{ strtoupper(substr($testimonial['name'], 0, 1)) }}</div>
+                    <div class="testimonial-author-info">
+                        <span class="testimonial-author-name">{{ $testimonial['name'] }}</span>
+                        <span class="testimonial-author-role">{{ $testimonial['role'] }}</span>
+                    </div>
+                </div>
+            </div>
         @endforeach
     </div>
-@endif
+</section>
 
-{{-- ── MODAL DETALLE ── --}}
-<div class="prop-modal-backdrop" id="propModal">
-    <div class="prop-modal">
-        <div class="prop-modal-header">
-            <h2 id="modalTitle">Property</h2>
-            <button type="button" class="prop-modal-close" id="modalClose">&times;</button>
-        </div>
-        <div class="prop-modal-body">
-            <div class="prop-modal-left">
-                <div class="prop-modal-gallery-main" id="modalMainImage"></div>
-                <div class="prop-modal-thumbs" id="modalThumbs"></div>
-                <div id="modalVideos"></div>
-            </div>
-            <div class="prop-modal-right" id="modalInfo"></div>
-        </div>
+<section class="home-cta">
+    <div class="home-cta-inner">
+        <h2>Ready to find your <em>next home?</em></h2>
+        <p>Browse our available apartments or reach out to our team — we're here to help you find the right place.</p>
+        <a href="{{ route('apartments.index') }}" class="btn-hero-primary">
+            Browse apartments <i class="bi bi-arrow-right"></i>
+        </a>
     </div>
-</div>
+</section>
 
 @endsection
 
 @push('scripts')
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function () {
-    'use strict';
+    const track = document.getElementById('processTrack');
+    if (!track) return;
 
-    const properties = @json($properties);
+    const slides = track.querySelectorAll('.process-slide');
+    const dots = document.querySelectorAll('.process-dot');
+    const progressSteps = document.querySelectorAll('.process-progress-step');
+    const prevBtn = document.getElementById('processPrev');
+    const nextBtn = document.getElementById('processNext');
+    const carousel = track.closest('.process-carousel');
 
-    // const BOSTON = [42.3601, -71.0589];
+    const total = slides.length;
+    let current = 0;
+    let autoplayTimer;
 
-    const geocoded = properties.filter(p => p.lat && p.lng);
-    const initialCenter = geocoded.length > 0
-        ? [
-            geocoded.reduce((s, p) => s + p.lat, 0) / geocoded.length,
-            geocoded.reduce((s, p) => s + p.lng, 0) / geocoded.length,
-          ]
-        : BOSTON;
+    function goTo(index) {
+        if (index < 0) index = total - 1;
+        if (index >= total) index = 0;
+        current = index;
+        track.style.transform = 'translateX(-' + (current * 100) + '%)';
 
-    const map = L.map('propertyMap').setView(initialCenter, 12);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 19,
-    }).addTo(map);
-
-    const icon = L.divIcon({
-        className: 'custom-marker',
-        html: '<div style="background:#f53003;width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform:rotate(45deg);color:white;font-size:14px;">🏠</div></div>',
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-    });
-
-    const markers = {};
-
-    properties.forEach(p => {
-        if (!p.lat || !p.lng) return;
-
-        const marker = L.marker([p.lat, p.lng], { icon }).addTo(map);
-
-        const priceLine = p.rent_formatted
-            ? `<div style="color:#f53003;font-weight:800;font-size:0.95rem;margin:0.25rem 0;">${p.rent_formatted} <span style="font-weight:500;color:#706f6c;font-size:0.8rem;">/mo</span></div>`
-            : '';
-
-        marker.bindPopup(`
-            <div style="font-family:inherit; min-width:200px;">
-                <strong style="font-size:0.9rem;">${p.title}</strong><br>
-                <span style="font-size:0.8rem;color:#706f6c;">${p.address}</span>
-                ${priceLine}
-                <button onclick="window.openPropertyModal(${p.id})"
-                        style="margin-top:0.4rem;background:#f53003;color:white;border:none;padding:0.4rem 0.85rem;border-radius:0.4rem;font-size:0.8rem;font-weight:600;cursor:pointer;">
-                    View details
-                </button>
-            </div>
-        `);
-
-        marker.on('click', () => highlightCard(p.id));
-        markers[p.id] = marker;
-    });
-
-    if (geocoded.length > 1) {
-        const bounds = L.latLngBounds(geocoded.map(p => [p.lat, p.lng]));
-        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
-    }
-
-    const select = document.getElementById('addressSelect');
-    select?.addEventListener('change', function () {
-        const id = parseInt(this.value);
-        if (!id) return;
-
-        const p = properties.find(x => x.id === id);
-        if (!p) return;
-
-        if (p.lat && p.lng) {
-            map.flyTo([p.lat, p.lng], 16, { duration: 0.8 });
-            markers[p.id]?.openPopup();
-        }
-        highlightCard(id);
-    });
-
-    function highlightCard(id) {
-        document.querySelectorAll('.property-item').forEach(el => {
-            el.classList.toggle('active', parseInt(el.dataset.id) === id);
+        dots.forEach((d, i) => d.classList.toggle('active', i === current));
+        progressSteps.forEach((p, i) => {
+            p.classList.toggle('active', i === current);
+            p.classList.toggle('done', i < current);
         });
     }
 
-    document.querySelectorAll('.property-item').forEach(card => {
-        card.addEventListener('click', function () {
-            const id = parseInt(this.dataset.id);
-            const p = properties.find(x => x.id === id);
-            if (!p) return;
+    function startAutoplay() {
+        autoplayTimer = setInterval(() => goTo(current + 1), 6000);
+    }
+    function stopAutoplay() {
+        clearInterval(autoplayTimer);
+    }
+    function resetAutoplay() {
+        stopAutoplay();
+        startAutoplay();
+    }
 
-            if (p.lat && p.lng) {
-                map.flyTo([p.lat, p.lng], 16, { duration: 0.8 });
-                markers[p.id]?.openPopup();
-            }
-            highlightCard(id);
-            openPropertyModal(id);
+    if (prevBtn) prevBtn.addEventListener('click', () => { goTo(current - 1); resetAutoplay(); });
+    if (nextBtn) nextBtn.addEventListener('click', () => { goTo(current + 1); resetAutoplay(); });
+
+    dots.forEach((dot) => {
+        dot.addEventListener('click', () => {
+            goTo(parseInt(dot.dataset.step, 10));
+            resetAutoplay();
         });
     });
 
-    const modal       = document.getElementById('propModal');
-    const modalTitle  = document.getElementById('modalTitle');
-    const modalMain   = document.getElementById('modalMainImage');
-    const modalThumbs = document.getElementById('modalThumbs');
-    const modalInfo   = document.getElementById('modalInfo');
-    const modalVideos = document.getElementById('modalVideos');
-    const modalClose  = document.getElementById('modalClose');
-
-    function openPropertyModal(id) {
-        const p = properties.find(x => x.id === id);
-        if (!p) return;
-
-        modalTitle.textContent = (p.title || 'Property') + ' — ' + p.address;
-
-        const images = (p.images && p.images.length)
-            ? p.images
-            : (p.primary_image ? [p.primary_image] : []);
-
-        if (images.length) {
-            modalMain.innerHTML = `<img src="${images[0]}" alt="">`;
-            modalThumbs.innerHTML = images.map((url, i) =>
-                `<button type="button" class="prop-modal-thumb ${i===0?'active':''}" data-url="${url}">
-                    <img src="${url}">
-                </button>`
-            ).join('');
-            modalThumbs.querySelectorAll('.prop-modal-thumb').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    modalMain.innerHTML = `<img src="${this.dataset.url}" alt="">`;
-                    modalThumbs.querySelectorAll('.prop-modal-thumb').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
-        } else {
-            modalMain.innerHTML = `<i class="bi bi-image" style="font-size:4rem;color:#d1d5db;"></i>`;
-            modalThumbs.innerHTML = '';
-        }
-
-        modalVideos.innerHTML = (p.videos && p.videos.length)
-            ? `<div class="prop-m-section" style="margin-top:1rem;">
-                 <div class="prop-m-section-title"><i class="bi bi-camera-video"></i> Video tour</div>
-                 <div class="prop-modal-videos">
-                   ${p.videos.map(v => `<video src="${v}" controls preload="metadata"></video>`).join('')}
-                 </div>
-               </div>`
-            : '';
-
-        let html = '';
-
-        html += `<div class="prop-m-price-hero">`;
-        if (p.rent_formatted) {
-            html += `<span class="prop-m-price">${p.rent_formatted}</span>
-                     <span class="prop-m-price-period">/ month</span>`;
-        } else {
-            html += `<span class="prop-m-price">Contact for pricing</span>`;
-        }
-        html += `</div>`;
-
-        const specs = [];
-        if (p.title)       specs.push(`<div class="prop-m-spec"><i class="bi bi-door-closed"></i>${p.title}</div>`);
-        if (p.bathrooms)   specs.push(`<div class="prop-m-spec"><i class="bi bi-droplet"></i>${p.bathrooms} ba</div>`);
-        if (p.square_feet) specs.push(`<div class="prop-m-spec"><i class="bi bi-rulers"></i>${parseInt(p.square_feet).toLocaleString()} sqft</div>`);
-        if (p.unit_type)   specs.push(`<div class="prop-m-spec"><i class="bi bi-house"></i>${p.unit_type}</div>`);
-        if (specs.length) {
-            html += `<div class="prop-m-specs">${specs.join('')}</div>`;
-        }
-
-        if (p.available_date) {
-            html += `<div class="prop-m-available">
-                <i class="bi bi-calendar-check"></i>
-                Available ${p.available_date}
-            </div>`;
-        }
-
-        if (p.description) {
-            html += `<div class="prop-m-section">
-                <div class="prop-m-section-title"><i class="bi bi-text-paragraph"></i> About</div>
-                <p class="prop-m-text">${p.description.replace(/\n/g,'<br>')}</p>
-            </div>`;
-        }
-
-        const leaseRows = [];
-        if (p.lease_term)        leaseRows.push(['Lease term', p.lease_term]);
-        if (p.rent_formatted)    leaseRows.push(['Monthly rent', p.rent_formatted]);
-        if (p.deposit_formatted) leaseRows.push(['Security deposit', p.deposit_formatted]);
-        if (leaseRows.length) {
-            html += `<div class="prop-m-section">
-                <div class="prop-m-section-title"><i class="bi bi-cash-stack"></i> Lease & Costs</div>
-                <div class="prop-m-info-list">
-                    ${leaseRows.map(([k,v]) => `<div class="prop-m-info-row">
-                        <span class="prop-m-info-label">${k}</span>
-                        <span class="prop-m-info-value">${v}</span>
-                    </div>`).join('')}
-                </div>
-            </div>`;
-        }
-
-        const features = [];
-        if (p.parking_type)   features.push(['Parking', p.parking_type + (p.parking_spot ? ' — Spot ' + p.parking_spot : '')]);
-        if (p.cooling_system) features.push(['Cooling', p.cooling_system]);
-        if (p.heating_system) features.push(['Heating', p.heating_system]);
-        if (p.laundry)        features.push(['Laundry', p.laundry]);
-        if (features.length) {
-            html += `<div class="prop-m-section">
-                <div class="prop-m-section-title"><i class="bi bi-stars"></i> Features</div>
-                <div class="prop-m-info-list">
-                    ${features.map(([k,v]) => `<div class="prop-m-info-row">
-                        <span class="prop-m-info-label">${k}</span>
-                        <span class="prop-m-info-value">${v}</span>
-                    </div>`).join('')}
-                </div>
-            </div>`;
-        }
-
-        if (p.pet_friendly) {
-            const petChips = [];
-            if (p.allow_cats)       petChips.push(`<span class="prop-m-chip pet"><i class="bi bi-check-circle-fill"></i> Cats welcome</span>`);
-            if (p.allow_small_dogs) petChips.push(`<span class="prop-m-chip pet"><i class="bi bi-check-circle-fill"></i> Small dogs${p.small_dog_max_weight ? ' (≤ ' + p.small_dog_max_weight + ' lbs)' : ''}</span>`);
-            if (p.allow_large_dogs) petChips.push(`<span class="prop-m-chip pet"><i class="bi bi-check-circle-fill"></i> Large dogs welcome</span>`);
-            if (petChips.length) {
-                html += `<div class="prop-m-section">
-                    <div class="prop-m-section-title"><i class="bi bi-heart"></i> Pet policy</div>
-                    <div class="prop-m-chips">${petChips.join('')}</div>
-                    ${p.max_pets ? `<p class="prop-m-text" style="margin-top:.5rem;font-size:.8rem;">Up to <strong>${p.max_pets}</strong> pet${p.max_pets > 1 ? 's' : ''} allowed.</p>` : ''}
-                </div>`;
-            }
-        }
-
-        if (p.amenities && p.amenities.length) {
-            html += `<div class="prop-m-section">
-                <div class="prop-m-section-title"><i class="bi bi-list-check"></i> Amenities</div>
-                <div class="prop-m-chips">
-                    ${p.amenities.map(a => `<span class="prop-m-chip">${a.icon ? `<i class="bi ${a.icon}"></i>` : ''}${a.name}</span>`).join('')}
-                </div>
-            </div>`;
-        }
-
-        if (p.utilities && p.utilities.length) {
-            html += `<div class="prop-m-section">
-                <div class="prop-m-section-title"><i class="bi bi-plug"></i> Utilities included</div>
-                <div class="prop-m-chips">
-                    ${p.utilities.map(u => `<span class="prop-m-chip">${u.icon ? `<i class="bi ${u.icon}"></i>` : ''}${u.name}</span>`).join('')}
-                </div>
-            </div>`;
-        }
-
-        const screening = [];
-        if (p.income_to_rent_ratio) {
-            screening.push(`Combined gross monthly income of at least <strong>${p.income_to_rent_ratio}× the monthly rent</strong>.`);
-        }
-        if (p.allow_eviction_older_than_5_years) {
-            screening.push(`Past evictions considered on a case-by-case basis if they occurred <strong>more than 5 years ago</strong>.`);
-        } else {
-            screening.push(`Recent evictions (within the last 5 years) may affect your application.`);
-        }
-        screening.push(`Standard credit and background screening applies to all applicants equally.`);
-
-        html += `<div class="prop-m-section">
-            <div class="prop-m-section-title"><i class="bi bi-clipboard-check"></i> What you'll need to qualify</div>
-            <ul class="prop-m-screening">
-                ${screening.map(s => `<li><i class="bi bi-check-circle"></i><span>${s}</span></li>`).join('')}
-            </ul>
-        </div>`;
-
-        if (p.restrictions) {
-            html += `<div class="prop-m-section">
-                <div class="prop-m-section-title"><i class="bi bi-exclamation-circle"></i> House rules</div>
-                <div class="prop-m-restrictions">${p.restrictions.replace(/\n/g,'<br>')}</div>
-            </div>`;
-        }
-
-        html += `<a href="${p.url}" class="prop-m-cta">
-            <i class="bi bi-arrow-right-circle"></i> View full details
-        </a>`;
-
-        modalInfo.innerHTML = html;
-
-        modal.classList.add('open');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closePropertyModal() {
-        modal.classList.remove('open');
-        document.body.style.overflow = '';
-    }
-
-    window.openPropertyModal = openPropertyModal;
-
-    modalClose?.addEventListener('click', closePropertyModal);
-    modal?.addEventListener('click', e => { if (e.target === modal) closePropertyModal(); });
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape' && modal.classList.contains('open')) closePropertyModal();
+    progressSteps.forEach((step) => {
+        step.addEventListener('click', () => {
+            goTo(parseInt(step.dataset.step, 10));
+            resetAutoplay();
+        });
     });
 
+    if (carousel) {
+        carousel.addEventListener('mouseenter', stopAutoplay);
+        carousel.addEventListener('mouseleave', startAutoplay);
+    }
+
+    let touchStartX = 0;
+    track.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    track.addEventListener('touchend', (e) => {
+        const diff = touchStartX - e.changedTouches[0].screenX;
+        if (Math.abs(diff) > 50) {
+            goTo(current + (diff > 0 ? 1 : -1));
+            resetAutoplay();
+        }
+    }, { passive: true });
+
+    goTo(0);
+    startAutoplay();
 })();
 </script>
 @endpush

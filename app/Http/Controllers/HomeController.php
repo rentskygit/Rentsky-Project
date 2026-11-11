@@ -4,17 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Property\Property;
 use App\Models\Property\PropertyCategory;
-use App\Services\Contracts\Product\ProductServiceInterface;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    protected $productService;
-
-    public function __construct(ProductServiceInterface $productService)
-    {
-        $this->productService = $productService;
-    }
 
     public function index()
     {
@@ -68,10 +61,10 @@ class HomeController extends Controller
 
         $properties = Property::active()
             ->where(function ($q) use ($query) {
-                $q->where('address', 'LIKE', "%{$query}%")
-                  ->orWhere('city', 'LIKE', "%{$query}%")
-                  ->orWhere('zip_code', 'LIKE', "%{$query}%")
-                  ->orWhere('description', 'LIKE', "%{$query}%");
+                $q->where('address', 'ILIKE', "%{$query}%")
+                  ->orWhere('city', 'ILIKE', "%{$query}%")
+                  ->orWhere('zip_code', 'ILIKE', "%{$query}%")
+                  ->orWhere('description', 'ILIKE', "%{$query}%");
             })
             ->with(['category', 'primaryImage'])
             ->paginate(12);
