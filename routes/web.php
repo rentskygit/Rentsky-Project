@@ -79,6 +79,9 @@ Route::middleware(['auth', 'module.access'])->group(function () {
     Route::resource('qualifications', QualificationController::class)
         ->except(['destroy']);
 
+    Route::get('qualifications/{qualification}/user-conflict/{user}', [QualificationController::class, 'userConflict'])
+    ->name('qualifications.user-conflict');
+    
     Route::get('qualifications/{qualification}/pdf', [QualificationController::class, 'pdf'])
         ->name('qualifications.pdf');
 

@@ -451,17 +451,47 @@
 
 @if($isAdmin)
 <div class="card-custom" style="margin-bottom:1.5rem;">
-    <div style="padding:1rem 1.25rem;">
-        <label class="form-label" style="font-size:0.83rem;font-weight:600;">Assign to user</label>
-        <select id="user_id_select" name="user_id" class="form-control" style="max-width:420px;" {{ $qualification ? 'disabled' : '' }}>
-            <option value="">— Select a user —</option>
-            @foreach($users as $u)
-            <option value="{{ $u->id }}" @selected(($targetUser && $targetUser->id === $u->id) || (!$qualification && auth()->id() === $u->id))>{{ $u->name }} — {{ $u->email }}</option>
-            @endforeach
-        </select>
-        @if($qualification)
-        <small class="text-muted" style="display:block;margin-top:0.4rem;">User cannot be changed once created.</small>
-        @endif
+    <div class="card-header-inner">
+        <i class="bi bi-person-plus"></i>
+        <span>Assign to user</span>
+        <span class="badge-count" style="background:var(--surface);color:var(--brand-muted);">optional</span>
+    </div>
+    <div style="padding:1.25rem 1.5rem;">
+        <div class="wiz-field" style="margin-bottom:0.75rem;">
+            <label style="display:block;font-size:0.83rem;font-weight:500;margin-bottom:0.4rem;color:var(--brand-primary);">
+                Client
+                <span class="help" style="display:inline;font-size:0.75rem;color:var(--brand-muted);font-weight:400;margin-left:0.35rem;">
+                    — leave empty for a walk-in intake
+                </span>
+            </label>
+            <select
+                id="user_id_select"
+                class="wiz-input"
+                style="max-width:520px;"
+            >
+                <option value="">— Walk-in / intake (no linked user) —</option>
+                @foreach($users as $u)
+                    <option value="{{ $u->id }}" @selected($targetUser && $targetUser->id === $u->id)>
+                        {{ $u->name }} — {{ $u->email }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <p style="font-size:0.78rem;color:var(--brand-muted);line-height:1.5;margin:0;">
+            <i class="bi bi-info-circle" style="margin-right:0.25rem;"></i>
+            Only users with the <strong>Client</strong> role appear in this list. If no user is selected, the qualification is saved as a walk-in intake using the data below.
+        </p>
+
+        <div id="conflict-warning" style="display:none;margin-top:0.85rem;padding:0.85rem 1rem;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:0.85rem;color:#78350f;line-height:1.5;">
+            <i class="bi bi-exclamation-triangle-fill" style="margin-right:0.35rem;"></i>
+            <strong id="conflict-user-name">This user</strong> already has a qualification (<span id="conflict-qual-id">#</span>).
+            Submitting this form will <strong>overwrite</strong> that qualification with the current data.
+        </div>
+
+        <div id="conflict-confirm-row" style="display:none;margin-top:0.75rem;align-items:center;gap:0.5rem;font-size:0.85rem;font-weight:500;color:var(--brand-primary);">
+            <input type="checkbox" id="confirm_overwrite_visual" style="width:16px;height:16px;cursor:pointer;">
+            <label for="confirm_overwrite_visual" style="cursor:pointer;margin:0;">Yes, overwrite the existing qualification.</label>
+        </div>
     </div>
 </div>
 @endif
@@ -487,8 +517,9 @@
     @method('PUT')
     @endif
 
-    @if($isAdmin && !$qualification)
-    <input type="hidden" name="user_id" id="user_id_hidden" value="">
+    @if($isAdmin)
+    <input type="hidden" name="user_id" id="user_id_hidden" value="{{ $qualification?->user_id ?? '' }}">
+    <input type="hidden" name="confirm_overwrite" id="confirm_overwrite_hidden" value="0">
     @endif
 
     <div class="wiz-progress">
@@ -1215,6 +1246,8 @@
         document.getElementById('userExistsModal').style.display = 'none';
         const select = document.getElementById('user_id_select');
         if (select) select.value = '';
+        const hidden = document.getElementById('user_id_hidden');
+        if (hidden) hidden.value = '';
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -1229,11 +1262,85 @@
             sync();
         }
 
-        if (userSelect && !userSelect.disabled) {
+        @if(!$qualification)
+        if (userSelect) {
             userSelect.addEventListener('change', function() {
                 checkUserQualification(this.value);
             });
         }
+        @endif
+
+        @if($qualification && $isAdmin)
+        (function() {
+            var select = userSelect;
+            var warning = document.getElementById('conflict-warning');
+            var confirmRow = document.getElementById('conflict-confirm-row');
+            var visual = document.getElementById('confirm_overwrite_visual');
+            var hiddenConfirm = document.getElementById('confirm_overwrite_hidden');
+            var userNameEl = document.getElementById('conflict-user-name');
+            var qualIdEl = document.getElementById('conflict-qual-id');
+            var form = document.getElementById('qualificationForm');
+
+            if (!select || !warning || !confirmRow || !form) return;
+
+            var conflictActive = false;
+
+            function hideWarning() {
+                warning.style.display = 'none';
+                confirmRow.style.display = 'none';
+                if (visual) visual.checked = false;
+                if (hiddenConfirm) hiddenConfirm.value = '0';
+                conflictActive = false;
+            }
+
+            function showWarning(name, id) {
+                userNameEl.textContent = name;
+                qualIdEl.textContent = '#' + id;
+                warning.style.display = 'block';
+                confirmRow.style.display = 'flex';
+                conflictActive = true;
+            }
+
+            select.addEventListener('change', function() {
+                var userId = this.value;
+
+                if (!userId) {
+                    hideWarning();
+                    return;
+                }
+
+                fetch('{{ url("/qualifications/" . $qualification->id . "/user-conflict") }}/' + userId, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(function(r) { return r.ok ? r.json() : { has_conflict: false }; })
+                .then(function(data) {
+                    if (data.has_conflict) {
+                        showWarning(data.user_name, data.qualification_id);
+                    } else {
+                        hideWarning();
+                    }
+                })
+                .catch(function() { hideWarning(); });
+            });
+
+            if (visual) {
+                visual.addEventListener('change', function() {
+                    if (hiddenConfirm) hiddenConfirm.value = this.checked ? '1' : '0';
+                });
+            }
+
+            form.addEventListener('submit', function(e) {
+                if (conflictActive && visual && !visual.checked) {
+                    e.preventDefault();
+                    alert('Please check "Yes, overwrite the existing qualification" to proceed.');
+                    visual.focus();
+                }
+            });
+        })();
+        @endif
     });
 </script>
 @endpush

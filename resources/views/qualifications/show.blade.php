@@ -2,10 +2,18 @@
 @section('title', 'Qualification')
 
 @section('content')
-<div class="page-header">
-    <h1 class="page-title">
-        <span>{{ $qualification->full_name ?: $qualification->user->name }}</span>
-    </h1>
+<h1 class="page-title">
+    <span>
+        @if($qualification->user)
+            {{ $qualification->user->name }}
+        @else
+            {{ $qualification->full_name ?: 'Walk-in' }}
+        @endif
+    </span>
+    @if($qualification->isWalkIn())
+        <span class="status-badge warning" style="font-size:0.7rem;vertical-align:middle;margin-left:0.5rem;">Walk-in</span>
+    @endif
+</h1>
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
         @if($isAdmin)
         <a href="{{ route('qualifications.pdf', $qualification) }}" class="btn-edit" data-no-loader>
@@ -29,11 +37,16 @@
 
 {{-- Meta --}}
 <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1.5rem;padding:1.25rem;border:1px solid var(--border);border-radius:6px;background:var(--surface);">
-    <div>
-        <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--brand-muted);font-weight:600;margin-bottom:0.25rem;">Applicant</div>
+<div>
+    <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--brand-muted);font-weight:600;margin-bottom:0.25rem;">Applicant</div>
+    @if($qualification->user)
         <div style="font-size:0.9rem;font-weight:500;">{{ $qualification->user->name }}</div>
         <div style="font-size:0.75rem;color:var(--brand-muted);">{{ $qualification->user->email }}</div>
-    </div>
+    @else
+        <div style="font-size:0.9rem;font-weight:500;">{{ $qualification->full_name ?: '—' }}</div>
+        <div style="font-size:0.75rem;color:var(--brand-muted);">{{ $qualification->data['email'] ?? '—' }}</div>
+    @endif
+</div>
     <div>
         <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--brand-muted);font-weight:600;margin-bottom:0.25rem;">Last edited</div>
         <div style="font-size:0.9rem;font-weight:500;">{{ $qualification->updated_at->format('M j, Y · g:i A') }}</div>

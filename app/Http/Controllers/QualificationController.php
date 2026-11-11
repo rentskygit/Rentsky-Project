@@ -19,9 +19,41 @@ class QualificationController extends Controller
 
         return $u->roles()->where(function ($q) {
             $q->where('roles.id', 1)
-              ->orWhereIn('roles.slug', ['admin', 'adviser', 'advisor'])
-              ->orWhereIn('roles.name', ['Admin', 'Adviser', 'Advisor']);
+                ->orWhereIn('roles.slug', ['admin', 'adviser', 'advisor'])
+                ->orWhereIn('roles.name', ['Admin', 'Adviser', 'Advisor']);
         })->exists();
+    }
+
+    protected function isClientUser(?User $user): bool
+    {
+        if (!$user) return false;
+
+        return $user->roles()->where(function ($q) {
+            $q->where('roles.id', 2)
+                ->orWhere('roles.slug', 'client')
+                ->orWhere('roles.name', 'Client');
+        })->exists();
+    }
+
+    protected function clientUsers()
+    {
+        return User::query()
+            ->whereHas('roles', function ($q) {
+                $q->where('roles.id', 2)
+                    ->orWhere('roles.slug', 'client')
+                    ->orWhere('roles.name', 'Client');
+            })
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+    }
+
+    protected function canView(Qualification $qualification): bool
+    {
+        $user = auth()->user();
+        if (!$user) return false;
+        if ($this->isAdmin()) return true;
+
+        return $qualification->user_id !== null && (int) $qualification->user_id === (int) $user->id;
     }
 
     public function index(Request $request)
@@ -46,12 +78,12 @@ class QualificationController extends Controller
             $query->where(function ($q) use ($s) {
                 $q->whereHas('user', function ($q2) use ($s) {
                     $q2->where('name', 'ILIKE', "%{$s}%")
-                       ->orWhere('email', 'ILIKE', "%{$s}%");
+                        ->orWhere('email', 'ILIKE', "%{$s}%");
                 })
-                ->orWhereRaw("(data->>'name') ILIKE ?", ["%{$s}%"])
-                ->orWhereRaw("(data->>'last_name') ILIKE ?", ["%{$s}%"])
-                ->orWhereRaw("(data->>'email') ILIKE ?", ["%{$s}%"])
-                ->orWhereRaw("(data->>'phone') ILIKE ?", ["%{$s}%"]);
+                    ->orWhereRaw("(data->>'name') ILIKE ?", ["%{$s}%"])
+                    ->orWhereRaw("(data->>'last_name') ILIKE ?", ["%{$s}%"])
+                    ->orWhereRaw("(data->>'email') ILIKE ?", ["%{$s}%"])
+                    ->orWhereRaw("(data->>'phone') ILIKE ?", ["%{$s}%"]);
             });
         }
 
@@ -62,6 +94,8 @@ class QualificationController extends Controller
                 $query->where(function ($q) {
                     $q->whereRaw("(data->>'has_voucher') IS NULL OR (data->>'has_voucher') != 'true'");
                 });
+            } elseif ($request->type === 'walkin') {
+                $query->whereNull('user_id');
             }
         }
 
@@ -83,9 +117,7 @@ class QualificationController extends Controller
 
     public function show(Qualification $qualification)
     {
-        $user = auth()->user();
-
-        if (!$this->isAdmin() && $qualification->user_id !== $user->id) {
+        if (!$this->canView($qualification)) {
             abort(403);
         }
 
@@ -101,11 +133,13 @@ class QualificationController extends Controller
     public function create(Request $request)
     {
         $user = auth()->user();
+        $isStaff = $this->isAdmin();
 
         $targetUser = null;
-        if ($this->isAdmin() && $request->filled('user_id')) {
+
+        if ($isStaff && $request->filled('user_id')) {
             $targetUser = User::findOrFail($request->user_id);
-        } elseif (!$this->isAdmin()) {
+        } elseif (!$isStaff) {
             $targetUser = $user;
 
             $existing = Qualification::where('user_id', $user->id)->first();
@@ -121,8 +155,8 @@ class QualificationController extends Controller
             'voucherPath'   => QualificationSchema::voucherPath(),
             'initialData'   => [],
             'targetUser'    => $targetUser,
-            'users'         => $this->isAdmin() ? User::orderBy('name')->get() : collect(),
-            'isAdmin'       => $this->isAdmin(),
+            'users'         => $isStaff ? $this->clientUsers() : collect(),
+            'isAdmin'       => $isStaff,
         ]);
     }
 
@@ -144,15 +178,52 @@ class QualificationController extends Controller
         ]);
     }
 
+    public function userConflict(Qualification $qualification, User $user)
+    {
+        if (!$this->isAdmin()) {
+            abort(403);
+        }
+
+        $existing = Qualification::where('user_id', $user->id)
+            ->where('id', '!=', $qualification->id)
+            ->first();
+
+        return response()->json([
+            'has_conflict'     => $existing !== null,
+            'qualification_id' => $existing?->id,
+            'user_name'        => $user->name,
+        ]);
+    }
+
     public function store(QualificationRequest $request)
     {
-        $targetUserId = $this->isAdmin() && $request->filled('user_id')
-            ? (int) $request->user_id
-            : auth()->id();
+        $isStaff = $this->isAdmin();
+        $targetUserId = null;
 
-        if (Qualification::where('user_id', $targetUserId)->exists()) {
-            return redirect()->route('qualifications.index')
-                ->with('error', 'A qualification for this user already exists.');
+        if ($isStaff) {
+            if ($request->filled('user_id')) {
+                $candidate = User::find($request->user_id);
+
+                if (!$this->isClientUser($candidate)) {
+                    return back()->withInput()->withErrors([
+                        'user_id' => 'The selected user must have the Client role.',
+                    ]);
+                }
+
+                if (Qualification::where('user_id', $candidate->id)->exists()) {
+                    return redirect()->route('qualifications.index')
+                        ->with('error', 'A qualification for this user already exists.');
+                }
+
+                $targetUserId = $candidate->id;
+            }
+        } else {
+            $targetUserId = auth()->id();
+
+            if (Qualification::where('user_id', $targetUserId)->exists()) {
+                return redirect()->route('qualifications.index')
+                    ->with('error', 'A qualification for this user already exists.');
+            }
         }
 
         $qualification = Qualification::create([
@@ -163,14 +234,14 @@ class QualificationController extends Controller
         ]);
 
         return redirect()->route('qualifications.show', $qualification)
-            ->with('success', 'Qualification submitted successfully.');
+            ->with('success', $targetUserId === null
+                ? 'Walk-in qualification submitted successfully.'
+                : 'Qualification submitted successfully.');
     }
 
     public function edit(Qualification $qualification)
     {
-        $user = auth()->user();
-
-        if (!$this->isAdmin() && $qualification->user_id !== $user->id) {
+        if (!$this->canView($qualification)) {
             abort(403);
         }
 
@@ -181,23 +252,55 @@ class QualificationController extends Controller
             'voucherPath'   => QualificationSchema::voucherPath(),
             'initialData'   => $qualification->data ?? [],
             'targetUser'    => $qualification->user,
-            'users'         => $this->isAdmin() ? User::orderBy('name')->get() : collect(),
+            'users'         => $this->isAdmin() ? $this->clientUsers() : collect(),
             'isAdmin'       => $this->isAdmin(),
         ]);
     }
 
     public function update(QualificationRequest $request, Qualification $qualification)
     {
-        $user = auth()->user();
-
-        if (!$this->isAdmin() && $qualification->user_id !== $user->id) {
+        if (!$this->canView($qualification)) {
             abort(403);
         }
 
-        $qualification->update([
+        $updates = [
             'data'           => $this->extractData($request),
             'last_edited_by' => auth()->id(),
-        ]);
+        ];
+
+        if ($this->isAdmin()) {
+            $newUserId = null;
+
+            if ($request->filled('user_id')) {
+                $candidate = User::find($request->user_id);
+
+                if (!$this->isClientUser($candidate)) {
+                    return back()->withInput()->withErrors([
+                        'user_id' => 'The selected user must have the Client role.',
+                    ]);
+                }
+
+                $existing = Qualification::where('user_id', $candidate->id)
+                    ->where('id', '!=', $qualification->id)
+                    ->first();
+
+                if ($existing) {
+                    if (!$request->boolean('confirm_overwrite')) {
+                        return back()->withInput()->withErrors([
+                            'user_id' => "The selected user already has a qualification (#{$existing->id}). Confirm overwrite to replace it.",
+                        ]);
+                    }
+
+                    $existing->delete();
+                }
+
+                $newUserId = $candidate->id;
+            }
+
+            $updates['user_id'] = $newUserId;
+        }
+
+        $qualification->update($updates);
 
         return redirect()->route('qualifications.show', $qualification)
             ->with('success', 'Qualification updated successfully.');
@@ -205,9 +308,7 @@ class QualificationController extends Controller
 
     public function pdf(Qualification $qualification)
     {
-        $user = auth()->user();
-
-        if (!$this->isAdmin() && $qualification->user_id !== $user->id) {
+        if (!$this->canView($qualification)) {
             abort(403);
         }
 
@@ -218,7 +319,8 @@ class QualificationController extends Controller
             'schema'        => QualificationSchema::all(),
         ])->setPaper('letter', 'portrait');
 
-        $filename = 'qualification-' . $qualification->user_id . '-' . now()->format('Ymd') . '.pdf';
+        $filename = 'qualification-' . ($qualification->user_id ?? 'walkin-' . $qualification->id)
+            . '-' . now()->format('Ymd') . '.pdf';
 
         return $pdf->download($filename);
     }

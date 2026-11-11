@@ -132,6 +132,7 @@
                     <option value="">All</option>
                     <option value="voucher" @selected(request('type')==='voucher' )>Voucher</option>
                     <option value="standard" @selected(request('type')==='standard' )>Standard</option>
+                    <option value="walkin" @selected(request('type')==='walkin' )>Walk-in</option>
                 </select>
             </div>
 
@@ -188,8 +189,27 @@
         <tbody>
             @foreach($qualifications as $q)
             <tr>
-                <td><strong>{{ $q->full_name ?: $q->user->name }}</strong></td>
-                <td><span style="color:var(--brand-muted);">{{ $q->user->email }}</span></td>
+                <td>
+                    <strong>
+                        @if($q->user)
+                        {{ $q->user->name }}
+                        @else
+                        {{ $q->full_name ?: 'Walk-in' }}
+                        @endif
+                    </strong>
+                    @if($q->isWalkIn())
+                    <span class="status-badge warning" style="font-size:0.6rem;margin-left:0.4rem;">Walk-in</span>
+                    @endif
+                </td>
+                <td>
+                    <span style="color:var(--brand-muted);">
+                        @if($q->user)
+                        {{ $q->user->email }}
+                        @else
+                        {{ $q->data['email'] ?? '—' }}
+                        @endif
+                    </span>
+                </td>
                 <td>
                     @if($q->isVoucher())
                     <span class="status-badge info">Voucher</span>
