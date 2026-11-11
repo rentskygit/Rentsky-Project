@@ -42,39 +42,39 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
 <style>
-    .ad-back { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--brand-muted); text-decoration: none; margin-bottom: 1.5rem; transition: color 0.2s; }
-    .ad-back:hover { color: var(--brand-primary); }
+    .apt-back { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--brand-muted); text-decoration: none; margin-bottom: 1.5rem; transition: color 0.2s; }
+    .apt-back:hover { color: var(--brand-primary); }
 
-    .ad-header { margin-bottom: 1.75rem; }
-    .ad-title { font-family: var(--font-display); font-size: 2.5rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; color: var(--brand-primary); margin-bottom: 0.4rem; }
-    .ad-address { font-size: 1rem; color: var(--brand-muted); }
+    .apt-header { margin-bottom: 1.75rem; }
+    .apt-title { font-family: var(--font-display); font-size: 2.5rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; color: var(--brand-primary); margin-bottom: 0.4rem; }
+    .apt-address { font-size: 1rem; color: var(--brand-muted); }
 
-    .ad-gallery { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 0.5rem; border-radius: 12px; overflow: hidden; margin-bottom: 2rem; height: 500px; }
-    .ad-gallery-item { position: relative; overflow: hidden; background: #f3f4f6; border: none; padding: 0; display: block; cursor: pointer; text-align: left; width: 100%; height: 100%; font-family: inherit; }
-    .ad-gallery-item:first-child { grid-row: 1 / 3; }
-    .ad-gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; display: block; }
-    .ad-gallery-item:hover img { transform: scale(1.04); }
-    .ad-gallery-more { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); color: white; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 0.25rem; font-weight: 700; font-size: 1rem; pointer-events: none; }
-    .ad-gallery-more i { font-size: 1.5rem; }
-    .ad-gallery-empty { grid-column: 1 / -1; grid-row: 1 / -1; display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #d1d5db; font-size: 4rem; }
+    .apt-gallery { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 0.5rem; border-radius: 12px; overflow: hidden; margin-bottom: 2rem; height: 500px; }
+    .apt-gallery-item { position: relative; overflow: hidden; background: #f3f4f6; border: none; padding: 0; display: block; cursor: pointer; text-align: left; width: 100%; height: 100%; font-family: inherit; }
+    .apt-gallery-item:first-child { grid-row: 1 / 3; }
+    .apt-gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; display: block; }
+    .apt-gallery-item:hover img { transform: scale(1.04); }
+    .apt-gallery-more { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); color: white; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 0.25rem; font-weight: 700; font-size: 1rem; pointer-events: none; }
+    .apt-gallery-more i { font-size: 1.5rem; }
+    .apt-gallery-empty { grid-column: 1 / -1; grid-row: 1 / -1; display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #d1d5db; font-size: 4rem; }
 
-    .ad-info-row { display: flex; gap: 1.5rem; flex-wrap: wrap; padding: 1.15rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
-    .ad-info-item { display: flex; flex-direction: column; gap: 0.2rem; }
-    .ad-info-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--brand-muted); font-weight: 600; }
-    .ad-info-value { font-size: 1.05rem; font-weight: 700; color: var(--brand-primary); }
+    .apt-info-row { display: flex; gap: 1.5rem; flex-wrap: wrap; padding: 1.15rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+    .apt-info-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .apt-info-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--brand-muted); font-weight: 600; }
+    .apt-info-value { font-size: 1.05rem; font-weight: 700; color: var(--brand-primary); }
 
-    .ad-layout { display: grid; grid-template-columns: 1fr 360px; gap: 2.5rem; align-items: start; }
+    .apt-layout { display: grid; grid-template-columns: 1fr 360px; gap: 2.5rem; align-items: start; }
 
-    .ad-block { margin-bottom: 2rem; }
-    .ad-block:last-child { margin-bottom: 0; }
-    .ad-block-title { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; color: var(--brand-primary); margin-bottom: 1rem; padding-bottom: 0.7rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.5rem; }
-    .ad-description { font-size: 0.95rem; color: var(--brand-primary); line-height: 1.75; white-space: pre-line; }
+    .apt-block { margin-bottom: 2rem; }
+    .apt-block:last-child { margin-bottom: 0; }
+    .apt-block-title { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; color: var(--brand-primary); margin-bottom: 1rem; padding-bottom: 0.7rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.5rem; }
+    .apt-description { font-size: 0.95rem; color: var(--brand-primary); line-height: 1.75; white-space: pre-line; }
 
-    .ad-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem 1.5rem; list-style: none; padding: 0; margin: 0; }
-    .ad-list li { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--brand-primary); }
-    .ad-list li i { color: var(--brand-secondary); font-size: 0.85rem; flex-shrink: 0; }
+    .apt-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem 1.5rem; list-style: none; padding: 0; margin: 0; }
+    .apt-list li { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--brand-primary); }
+    .apt-list li i { color: var(--brand-secondary); font-size: 0.85rem; flex-shrink: 0; }
 
-    .ad-restrictions {
+    .apt-restrictions {
         background: #fef3c7;
         border: 1px solid #fde68a;
         border-radius: 8px;
@@ -85,7 +85,7 @@
         white-space: pre-line;
     }
 
-    .ad-internal-restrictions {
+    .apt-internal-restrictions {
         background: #fef2f2;
         border: 1px solid #fecaca;
         border-radius: 8px;
@@ -96,7 +96,7 @@
         white-space: pre-line;
     }
 
-    .ad-staff-badge {
+    .apt-staff-badge {
         margin-left: 0.4rem;
         font-size: 0.65rem;
         font-weight: 700;
@@ -108,12 +108,12 @@
         border-radius: 9999px;
     }
 
-    .ad-videos-grid {
+    .apt-videos-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 1rem;
     }
-    .ad-videos-grid video {
+    .apt-videos-grid video {
         width: 100%;
         border-radius: 8px;
         background: black;
@@ -121,7 +121,7 @@
         display: block;
     }
 
-    .ad-tour-cta {
+    .apt-tour-cta {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
@@ -134,30 +134,30 @@
         text-decoration: none;
         transition: all 0.2s;
     }
-    .ad-tour-cta:hover { background: #2a3d85; color: white; text-decoration: none; }
+    .apt-tour-cta:hover { background: #2a3d85; color: white; text-decoration: none; }
 
-    .ad-sidebar { position: sticky; top: calc(var(--header-height) + 1.5rem); }
-    .ad-sidebar-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 1.75rem; }
-    .ad-sidebar-price { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--brand-primary); margin-bottom: 0.2rem; }
-    .ad-sidebar-price span { font-size: 0.95rem; font-weight: 500; color: var(--brand-muted); margin-left: 0.1rem; }
-    .ad-sidebar-cta { display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; padding: 0.9rem 1.25rem; background: var(--brand-primary); color: white; border-radius: 6px; font-weight: 600; font-size: 0.9rem; text-decoration: none; border: none; cursor: pointer; font-family: inherit; transition: all 0.2s; margin: 1.25rem 0; }
-    .ad-sidebar-cta:hover { background: var(--brand-secondary); color: white; text-decoration: none; }
+    .apt-sidebar { position: sticky; top: calc(var(--header-height) + 1.5rem); }
+    .apt-sidebar-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 1.75rem; }
+    .apt-sidebar-price { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--brand-primary); margin-bottom: 0.2rem; }
+    .apt-sidebar-price span { font-size: 0.95rem; font-weight: 500; color: var(--brand-muted); margin-left: 0.1rem; }
+    .apt-sidebar-cta { display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; padding: 0.9rem 1.25rem; background: var(--brand-primary); color: white; border-radius: 6px; font-weight: 600; font-size: 0.9rem; text-decoration: none; border: none; cursor: pointer; font-family: inherit; transition: all 0.2s; margin: 1.25rem 0; }
+    .apt-sidebar-cta:hover { background: var(--brand-secondary); color: white; text-decoration: none; }
 
-    .ad-facts { display: flex; flex-direction: column; gap: 0.75rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
-    .ad-fact { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.88rem; gap: 1rem; }
-    .ad-fact-label { color: var(--brand-muted); }
-    .ad-fact-value { font-weight: 600; color: var(--brand-primary); text-align: right; }
+    .apt-facts { display: flex; flex-direction: column; gap: 0.75rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+    .apt-fact { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.88rem; gap: 1rem; }
+    .apt-fact-label { color: var(--brand-muted); }
+    .apt-fact-value { font-weight: 600; color: var(--brand-primary); text-align: right; }
 
-    .ad-related { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border); }
-    .ad-related-title { font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1.25rem; color: var(--brand-primary); }
-    .ad-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
-    .ad-related-card { background: white; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; text-decoration: none; color: inherit; transition: all 0.2s ease; }
-    .ad-related-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06); text-decoration: none; color: inherit; }
-    .ad-related-card-image { width: 100%; aspect-ratio: 4/3; background: #f3f4f6; overflow: hidden; }
-    .ad-related-card-image img { width: 100%; height: 100%; object-fit: cover; }
-    .ad-related-card-body { padding: 0.85rem; }
-    .ad-related-card-title { font-size: 0.9rem; font-weight: 600; color: var(--brand-primary); margin-bottom: 0.2rem; line-height: 1.3; }
-    .ad-related-card-price { font-size: 1rem; font-weight: 700; color: var(--brand-primary); }
+    .apt-related { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+    .apt-related-title { font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1.25rem; color: var(--brand-primary); }
+    .apt-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+    .apt-related-card { background: white; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; text-decoration: none; color: inherit; transition: all 0.2s ease; }
+    .apt-related-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06); text-decoration: none; color: inherit; }
+    .apt-related-card-image { width: 100%; aspect-ratio: 4/3; background: #f3f4f6; overflow: hidden; }
+    .apt-related-card-image img { width: 100%; height: 100%; object-fit: cover; }
+    .apt-related-card-body { padding: 0.85rem; }
+    .apt-related-card-title { font-size: 0.9rem; font-weight: 600; color: var(--brand-primary); margin-bottom: 0.2rem; line-height: 1.3; }
+    .apt-related-card-price { font-size: 1rem; font-weight: 700; color: var(--brand-primary); }
 
     .show-modal-backdrop {
         position: fixed;
@@ -351,15 +351,15 @@
     }
 
     @media (max-width: 1024px) {
-        .ad-layout { grid-template-columns: 1fr; }
-        .ad-sidebar { position: static; }
-        .ad-gallery { height: 380px; }
+        .apt-layout { grid-template-columns: 1fr; }
+        .apt-sidebar { position: static; }
+        .apt-gallery { height: 380px; }
     }
     @media (max-width: 640px) {
-        .ad-title { font-size: 1.5rem; }
-        .ad-gallery { grid-template-columns: 1fr; grid-template-rows: 1fr; height: 260px; }
-        .ad-gallery-item:not(:first-child) { display: none; }
-        .ad-list { grid-template-columns: 1fr; }
+        .apt-title { font-size: 1.5rem; }
+        .apt-gallery { grid-template-columns: 1fr; grid-template-rows: 1fr; height: 260px; }
+        .apt-gallery-item:not(:first-child) { display: none; }
+        .apt-list { grid-template-columns: 1fr; }
 
         .apt-lightbox { padding: 0.75rem; }
         .apt-lightbox-close { width: 38px; height: 38px; font-size: 1.05rem; top: 0.75rem; right: 0.75rem; }
@@ -373,31 +373,31 @@
 
 @section('content')
 
-<a href="{{ route('apartments.index') }}" class="ad-back">
+<a href="{{ route('apartments.index') }}" class="apt-back">
     <i class="bi bi-arrow-left"></i> Back to apartments
 </a>
 
-<div class="ad-header">
-    <h1 class="ad-title">
+<div class="apt-header">
+    <h1 class="apt-title">
         {{ $apartment->address }}
         @if($apartment->unit_type) {{ $apartment->unit_type }} @endif
     </h1>
-    <p class="ad-address">
+    <p class="apt-address">
         {{ $apartment->city }}@if($apartment->state), {{ $apartment->state }}@endif
         {{ $apartment->zip_code }}
     </p>
 </div>
 
 @if($apartment->images->isNotEmpty())
-    <div class="ad-gallery" id="aptGallery">
+    <div class="apt-gallery" id="aptGallery">
         @foreach($apartment->images->take(3) as $i => $img)
             <button type="button"
-                    class="ad-gallery-item"
+                    class="apt-gallery-item"
                     data-lightbox-index="{{ $i }}"
                     aria-label="View image {{ $i + 1 }}">
                 <img src="{{ $img->image_url }}" alt="{{ $apartment->address }} image {{ $i + 1 }}">
                 @if($i === 2 && $apartment->images->count() > 3)
-                    <div class="ad-gallery-more">
+                    <div class="apt-gallery-more">
                         <i class="bi bi-images"></i>
                         +{{ $apartment->images->count() - 3 }} more
                     </div>
@@ -406,51 +406,51 @@
         @endforeach
     </div>
 @else
-    <div class="ad-gallery" style="height:260px;grid-template-columns:1fr;grid-template-rows:1fr;">
-        <div class="ad-gallery-empty"><i class="bi bi-image"></i></div>
+    <div class="apt-gallery" style="height:260px;grid-template-columns:1fr;grid-template-rows:1fr;">
+        <div class="apt-gallery-empty"><i class="bi bi-image"></i></div>
     </div>
 @endif
 
-<div class="ad-info-row">
+<div class="apt-info-row">
     @if($apartment->category)
-        <div class="ad-info-item">
-            <span class="ad-info-label">Bedrooms</span>
-            <span class="ad-info-value">{{ $apartment->category->name }}</span>
+        <div class="apt-info-item">
+            <span class="apt-info-label">Bedrooms</span>
+            <span class="apt-info-value">{{ $apartment->category->name }}</span>
         </div>
     @endif
     @if($apartment->bathrooms)
-        <div class="ad-info-item">
-            <span class="ad-info-label">Bathrooms</span>
-            <span class="ad-info-value">{{ $apartment->bathrooms }}</span>
+        <div class="apt-info-item">
+            <span class="apt-info-label">Bathrooms</span>
+            <span class="apt-info-value">{{ $apartment->bathrooms }}</span>
         </div>
     @endif
     @if($apartment->square_feet)
-        <div class="ad-info-item">
-            <span class="ad-info-label">Square Feet</span>
-            <span class="ad-info-value">{{ number_format($apartment->square_feet) }}</span>
+        <div class="apt-info-item">
+            <span class="apt-info-label">Square Feet</span>
+            <span class="apt-info-value">{{ number_format($apartment->square_feet) }}</span>
         </div>
     @endif
     @if($apartment->available_date)
-        <div class="ad-info-item">
-            <span class="ad-info-label">Available</span>
-            <span class="ad-info-value">{{ $apartment->available_date->format('m/d/Y') }}</span>
+        <div class="apt-info-item">
+            <span class="apt-info-label">Available</span>
+            <span class="apt-info-value">{{ $apartment->available_date->format('m/d/Y') }}</span>
         </div>
     @endif
 </div>
 
-<div class="ad-layout">
+<div class="apt-layout">
     <div>
         @if($apartment->description)
-            <div class="ad-block">
-                <h2 class="ad-block-title">About this apartment</h2>
-                <p class="ad-description">{{ $apartment->description }}</p>
+            <div class="apt-block">
+                <h2 class="apt-block-title">About this apartment</h2>
+                <p class="apt-description">{{ $apartment->description }}</p>
             </div>
         @endif
 
         @if($apartment->videos->isNotEmpty())
-            <div class="ad-block">
-                <h2 class="ad-block-title"><i class="bi bi-camera-video"></i> Videos</h2>
-                <div class="ad-videos-grid">
+            <div class="apt-block">
+                <h2 class="apt-block-title"><i class="bi bi-camera-video"></i> Videos</h2>
+                <div class="apt-videos-grid">
                     @foreach($apartment->videos as $video)
                         <video src="{{ $video->video_url }}" controls preload="metadata"></video>
                     @endforeach
@@ -459,18 +459,18 @@
         @endif
 
         @if($apartment->virtual_tour_url)
-            <div class="ad-block">
-                <h2 class="ad-block-title"><i class="bi bi-box-arrow-up-right"></i> Virtual Tour</h2>
-                <a href="{{ $apartment->virtual_tour_url }}" target="_blank" rel="noopener" class="ad-tour-cta">
+            <div class="apt-block">
+                <h2 class="apt-block-title"><i class="bi bi-box-arrow-up-right"></i> Virtual Tour</h2>
+                <a href="{{ $apartment->virtual_tour_url }}" target="_blank" rel="noopener" class="apt-tour-cta">
                     <i class="bi bi-box-arrow-up-right"></i> Open virtual tour
                 </a>
             </div>
         @endif
 
         @if($apartment->amenities->isNotEmpty() || $apartment->parkingType || $apartment->coolingSystem || $apartment->heatingSystem || $apartment->laundry)
-            <div class="ad-block">
-                <h2 class="ad-block-title">Amenities & Features</h2>
-                <ul class="ad-list">
+            <div class="apt-block">
+                <h2 class="apt-block-title">Amenities & Features</h2>
+                <ul class="apt-list">
                     @if($apartment->parkingType)
                         <li><i class="bi bi-car-front"></i> Parking: {{ $apartment->parkingType->name }}@if($apartment->parking_spot) — {{ $apartment->parking_spot }} @endif</li>
                     @endif
@@ -491,9 +491,9 @@
         @endif
 
         @if($apartment->utilities->isNotEmpty())
-            <div class="ad-block">
-                <h2 class="ad-block-title">Utilities Included</h2>
-                <ul class="ad-list">
+            <div class="apt-block">
+                <h2 class="apt-block-title">Utilities Included</h2>
+                <ul class="apt-list">
                     @foreach($apartment->utilities as $util)
                         <li><i class="bi bi-check2"></i> {{ $util->name }}</li>
                     @endforeach
@@ -502,9 +502,9 @@
         @endif
 
         @if($apartment->pet_friendly || $apartment->allow_cats || $apartment->allow_small_dogs || $apartment->allow_large_dogs)
-            <div class="ad-block">
-                <h2 class="ad-block-title">Pet Policy</h2>
-                <ul class="ad-list">
+            <div class="apt-block">
+                <h2 class="apt-block-title">Pet Policy</h2>
+                <ul class="apt-list">
                     @if($apartment->allow_cats)
                         <li><i class="bi bi-check2"></i> Cats allowed</li>
                     @endif
@@ -522,61 +522,61 @@
         @endif
 
         @if($apartment->restrictions)
-            <div class="ad-block">
-                <h2 class="ad-block-title"><i class="bi bi-exclamation-triangle"></i> Restrictions</h2>
-                <div class="ad-restrictions">{{ $apartment->restrictions }}</div>
+            <div class="apt-block">
+                <h2 class="apt-block-title"><i class="bi bi-exclamation-triangle"></i> Restrictions</h2>
+                <div class="apt-restrictions">{{ $apartment->restrictions }}</div>
             </div>
         @endif
 
         @if($canSeeInternal && $apartment->internal_restrictions)
-            <div class="ad-block">
-                <h2 class="ad-block-title">
+            <div class="apt-block">
+                <h2 class="apt-block-title">
                     <i class="bi bi-lock-fill" style="color:#b91c1c;"></i>
                     Internal Restrictions
-                    <span class="ad-staff-badge">Staff only</span>
+                    <span class="apt-staff-badge">Staff only</span>
                 </h2>
-                <div class="ad-internal-restrictions">{{ $apartment->internal_restrictions }}</div>
+                <div class="apt-internal-restrictions">{{ $apartment->internal_restrictions }}</div>
             </div>
         @endif
     </div>
 
-    <aside class="ad-sidebar">
-        <div class="ad-sidebar-card">
+    <aside class="apt-sidebar">
+        <div class="apt-sidebar-card">
             @if($apartment->rent)
-                <div class="ad-sidebar-price">
+                <div class="apt-sidebar-price">
                     ${{ number_format($apartment->rent, 0) }}<span>/month</span>
                 </div>
             @else
-                <div class="ad-sidebar-price" style="font-size:1.15rem;">Contact for pricing</div>
+                <div class="apt-sidebar-price" style="font-size:1.15rem;">Contact for pricing</div>
             @endif
 
-            <button type="button" class="ad-sidebar-cta" onclick="openScheduleModal()">
+            <button type="button" class="apt-sidebar-cta" onclick="openScheduleModal()">
                 <i class="bi bi-calendar-event"></i> Schedule a showing
             </button>
 
-            <div class="ad-facts">
+            <div class="apt-facts">
                 @if($apartment->deposit)
-                    <div class="ad-fact">
-                        <span class="ad-fact-label">Deposit</span>
-                        <span class="ad-fact-value">${{ number_format($apartment->deposit, 0) }}</span>
+                    <div class="apt-fact">
+                        <span class="apt-fact-label">Deposit</span>
+                        <span class="apt-fact-value">${{ number_format($apartment->deposit, 0) }}</span>
                     </div>
                 @endif
                 @if($apartment->leaseTerm)
-                    <div class="ad-fact">
-                        <span class="ad-fact-label">Lease term</span>
-                        <span class="ad-fact-value">{{ $apartment->leaseTerm->name }}</span>
+                    <div class="apt-fact">
+                        <span class="apt-fact-label">Lease term</span>
+                        <span class="apt-fact-value">{{ $apartment->leaseTerm->name }}</span>
                     </div>
                 @endif
                 @if($apartment->available_date)
-                    <div class="ad-fact">
-                        <span class="ad-fact-label">Available</span>
-                        <span class="ad-fact-value">{{ $apartment->available_date->format('m/d/Y') }}</span>
+                    <div class="apt-fact">
+                        <span class="apt-fact-label">Available</span>
+                        <span class="apt-fact-value">{{ $apartment->available_date->format('m/d/Y') }}</span>
                     </div>
                 @endif
                 @if($apartment->unit_type)
-                    <div class="ad-fact">
-                        <span class="ad-fact-label">Unit</span>
-                        <span class="ad-fact-value">{{ $apartment->unit_type }}</span>
+                    <div class="apt-fact">
+                        <span class="apt-fact-label">Unit</span>
+                        <span class="apt-fact-value">{{ $apartment->unit_type }}</span>
                     </div>
                 @endif
             </div>
@@ -585,22 +585,22 @@
 </div>
 
 @if($related->isNotEmpty())
-    <div class="ad-related">
-        <h2 class="ad-related-title">Similar apartments</h2>
-        <div class="ad-related-grid">
+    <div class="apt-related">
+        <h2 class="apt-related-title">Similar apartments</h2>
+        <div class="apt-related-grid">
             @foreach($related as $rel)
-                <a href="{{ route('apartments.show', $rel->slug) }}" class="ad-related-card">
-                    <div class="ad-related-card-image">
+                <a href="{{ route('apartments.show', $rel->slug) }}" class="apt-related-card">
+                    <div class="apt-related-card-image">
                         @if($rel->primaryImage)
                             <img src="{{ $rel->primaryImage->image_url }}" alt="{{ $rel->address }}" loading="lazy">
                         @else
-                            <div class="ad-gallery-empty" style="font-size:2rem;"><i class="bi bi-image"></i></div>
+                            <div class="apt-gallery-empty" style="font-size:2rem;"><i class="bi bi-image"></i></div>
                         @endif
                     </div>
-                    <div class="ad-related-card-body">
-                        <div class="ad-related-card-title">{{ $rel->address }} @if($rel->unit_type) {{ $rel->unit_type }} @endif</div>
+                    <div class="apt-related-card-body">
+                        <div class="apt-related-card-title">{{ $rel->address }} @if($rel->unit_type) {{ $rel->unit_type }} @endif</div>
                         @if($rel->rent)
-                            <div class="ad-related-card-price">${{ number_format($rel->rent, 0) }}<span style="font-size:0.7rem;color:var(--brand-muted);font-weight:500;">/mo</span></div>
+                            <div class="apt-related-card-price">${{ number_format($rel->rent, 0) }}<span style="font-size:0.7rem;color:var(--brand-muted);font-weight:500;">/mo</span></div>
                         @endif
                     </div>
                 </a>
