@@ -5,45 +5,56 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: rentsky_app       
+    container_name: rentsky_app
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
+      - rentsky_storage:/var/www/html/storage/app/public
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    restart: unless-stopped
     networks:
       - rentsky_network
 
   web:
     image: nginx:alpine
-    container_name: rentsky_nginx      
+    container_name: rentsky_nginx
     ports:
-      - "8001:80"                      
+      - "127.0.0.1:8001:80"
     volumes:
       - ./:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - rentsky_storage:/var/www/html/storage/app/public:ro
     depends_on:
       - app
+    restart: unless-stopped
     networks:
       - rentsky_network
 
   db:
     image: postgres:16
-    container_name: rentsky_db         
-    restart: always
-    environment:
-      POSTGRES_DB: rentsky
-      POSTGRES_USER: rentsky_user
-      POSTGRES_PASSWORD: rentsky_pass
+    container_name: rentsky_db
+    restart: unless-stopped
     ports:
-      - "5434:5432"                    
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - rentsky_pgdata:/var/lib/postgresql/data   
+      - rentsky_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - rentsky_network
 
 volumes:
-  rentsky_pgdata:                      
+  rentsky_pgdata:
+  rentsky_storage:
 
 networks:
   rentsky_network:

@@ -71,9 +71,9 @@
                                       onsubmit="return confirmDelete(event, '{{ addslashes($user->name) }}')" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn-icon-action danger" title="Delete">
+                                    <!-- <button type="submit" class="btn-icon-action danger" title="Delete">
                                         <i class="bi bi-trash3"></i>
-                                    </button>
+                                    </button> -->
                                 </form>
                             </div>
                         </td>

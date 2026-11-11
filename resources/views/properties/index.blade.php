@@ -97,13 +97,13 @@
                             <a href="{{ route('properties.edit', $p) }}" class="btn-icon-action" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form method="POST" action="{{ route('properties.destroy', $p) }}"
+                            <!-- <form method="POST" action="{{ route('properties.destroy', $p) }}"
                                   onsubmit="return confirmDelete(event,'{{ addslashes($p->address) }}')" style="display:inline;">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn-icon-action danger" title="Delete">
                                     <i class="bi bi-trash3"></i>
                                 </button>
-                            </form>
+                            </form> -->
                         </div>
                     </td>
                 </tr>
